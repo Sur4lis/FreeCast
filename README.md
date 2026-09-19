@@ -13,7 +13,7 @@
 
 ## 下载与安装
 
-在 [Releases](https://github.com/Sur4lis/FreeCast/releases) 下载 **FreeCast_v1.01.zip**。
+在 [Releases](https://github.com/Sur4lis/FreeCast/releases) 下载 **FreeCast_v1.02.zip**。
 
 1. 解压到固定文件夹。
 2. Chrome 打开 chrome://extensions；Edge 打开 edge://extensions。
