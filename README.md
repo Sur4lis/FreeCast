@@ -2,13 +2,15 @@
 
 **画面你来选，解说听你的。**
 
+本项目采用 **Vibe Coding（AI 辅助编程）** 方式开发。
+
 FreeCast 是面向电脑端 Chrome / Microsoft Edge 的直播组合播放器扩展。将喜欢的解说、比赛画面和弹幕组合在一起，支持在本机进行 B 路 AI 人声过滤。
 
 ## 下载
 
 打开本仓库的 **[Releases（发行版）](https://github.com/Sur4lis/FreeCast/releases)**，在 **Assets** 中下载：
 
-`FreeCast_浏览器插件_v1.01_AI多平台版.zip`
+`FreeCast_v1.01.zip`
 
 GitHub 自动生成的 `Source code (zip)` / `Source code (tar.gz)` 是仓库快照，不是插件安装包。
 
