@@ -1,6 +1,5 @@
 #danmaku .bullet{font-size:var(--danmaku-font-size,21px);line-height:1.5}
 #danmaku .bullet.is-self{border:1px solid var(--self-danmaku-color,#ffffff);border-radius:2px;padding:0 6px;line-height:calc(1.8em - 2px)}
-#danmakuSettings .self-danmaku-preview{display:flex;align-items:center;justify-content:flex-end;margin:4px 0 10px}
 #danmakuSettings .self-danmaku-preview span{position:relative;display:inline-block;border-radius:2px;padding:5px 11px;background:#14171d;color:#fff;font-size:14px;font-weight:600;text-shadow:1px 1px 3px #000}
 #danmakuSettings .self-danmaku-preview span::after{content:"";position:absolute;inset:3px;border:1px solid var(--self-danmaku-color,#ffffff);border-radius:2px;pointer-events:none}
 .chat-emote{display:inline-block;height:1.4em;max-width:7em;object-fit:contain;vertical-align:middle;margin:0 .08em}.chat-row .chat-emote{font-size:16px}.bullet .chat-emote{filter:drop-shadow(0 1px 1px #0008)}
