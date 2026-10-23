@@ -1,0 +1,1 @@
+let timer;self.onmessage=({data})=>{clearInterval(timer);if(data==='start'||data?.type==='start')timer=setInterval(()=>self.postMessage('frame'),1000/Math.max(1,Math.min(60,Number(data?.fps)||30)));};

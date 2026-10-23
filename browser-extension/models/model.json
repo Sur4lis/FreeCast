@@ -1,0 +1,9 @@
+{
+  "file": "UVR-MDX-NET-Inst_HQ_3.onnx",
+  "sha256": "317554b07fe1ea5279a77f2b1520a41ea4b93432560c4ffd08792c30fddf9adc",
+  "compensate": 1.022,
+  "mdx_dim_f_set": 3072,
+  "mdx_dim_t_set": 8,
+  "mdx_n_fft_scale_set": 6144,
+  "primary_stem": "Instrumental"
+}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#84aeba"/><stop offset="1" stop-color="#dcecef"/></linearGradient>
+    <linearGradient id="center"><stop stop-color="#b7d1d6" stop-opacity="0"/><stop offset=".22" stop-color="#e9f2f4" stop-opacity=".8"/><stop offset=".78" stop-color="#e9f2f4" stop-opacity=".8"/><stop offset="1" stop-color="#b7d1d6" stop-opacity="0"/></linearGradient>
+    <g id="birch">
+      <path d="M52 1100 59 584 40 191 57 80 65 185 77 570 70 1100Z" fill="#edf3e6"/>
+      <path d="m61 473-26-70-16-14-9-60 7-1 15 57 14 14 18 53M68 627l38-59 12-79 7-2-7 88-48 77M56 310l-37-46-10-53 7 1 12 47 27 32M68 208l25-43 6-52 6 1-6 57-29 54" fill="#6c8c88"/>
+      <path d="m51 280 12 2m-9 92 10-1m-4 104 11 1m-8 84 10 1m-12 131 12-2m-13 67 9 1m-12 113 11 1m-14 78 13-1m-11 66 11-1" stroke="#829a8d" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1920v1200H0z"/>
+  <path d="M0 843 160 778 288 849 438 745 593 829 774 786 979 857 1235 738 1430 828 1602 737 1771 815 1920 744v456H0Z" fill="#9bbac7"/>
+  <path d="M0 960q320-125 620-15t650-14 650 5v264H0Z" fill="#e2f0ee"/>
+  <path d="M0 1050q265-79 510 9t495-4 473 20 442-16v141H0Z" fill="#f3f8f0"/>
+  <use href="#birch" transform="translate(-15 0)"/>
+  <use href="#birch" transform="translate(160 110) scale(.65)" opacity=".65"/>
+  <use href="#birch" transform="translate(1887 -40) scale(-1.1 1.1)"/>
+  <use href="#birch" transform="translate(1730 160) scale(-.65 .8)" opacity=".7"/>
+  <g fill="#f3f8f0" opacity=".65"><circle cx="112" cy="97" r="4"/><circle cx="230" cy="298" r="6"/><circle cx="93" cy="648" r="5"/><circle cx="152" cy="740" r="3"/><circle cx="1810" cy="248" r="6"/><circle cx="1731" cy="414" r="4"/><circle cx="1847" cy="607" r="5"/><circle cx="1763" cy="810" r="4"/><circle cx="421" cy="92" r="4"/><circle cx="1518" cy="119" r="4"/><circle cx="957" cy="138" r="5"/></g>
+  <path fill="url(#center)" d="M0 0h1920v1200H0z"/>
+</svg>

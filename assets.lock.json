@@ -1,0 +1,8 @@
+{
+  "archive": "https://github.com/Sur4lis/FreeCast/releases/download/v1.10/FreeCast_v1.10.zip",
+  "sha256": "2fac6928244420b1a053051346d6b2a5334a38570f82fea44362f789bbe2e601",
+  "files": {
+    "models/UVR-MDX-NET-Inst_HQ_3.onnx": "317554b07fe1ea5279a77f2b1520a41ea4b93432560c4ffd08792c30fddf9adc",
+    "vendor/ort/ort-wasm-simd-threaded.asyncify.wasm": "39f9f0894d478800487ed9f7dbe92618498db320cf55c8e3d89adff8dce658da"
+  }
+}

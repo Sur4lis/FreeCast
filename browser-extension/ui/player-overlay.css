@@ -1,0 +1,86 @@
+/* Video controls need stable contrast over both bright and dark footage.
+   Page surfaces retain their skin; only the two overlay modes use this scrim. */
+:root body:is(.view-full,.view-theater) #player .player-bottom{
+  --overlay-accent:var(--player-accent,color-mix(in srgb,var(--a) 55%,white));
+  color-scheme:dark;
+  color:#f8f9fc;
+  background:linear-gradient(to top,#06090fdf,#06090fb3 70%,#06090f70);
+  padding:10px 16px 12px;
+  gap:8px;
+  text-shadow:0 1px 2px #000c;
+  border:0;
+  box-shadow:none;
+  isolation:isolate;
+}
+:root body:is(.view-full,.view-theater) #player .player-bottom:before{
+  content:'';position:absolute;inset:-36px 0 100%;
+  background:linear-gradient(transparent,#06090f70);pointer-events:none;z-index:-1;
+}
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(.replay-controls,.player-actions,#playStatus,#videoStatus){color:#f0f2f7;opacity:1}
+:root body:is(.view-full,.view-theater) #player .player-bottom #playStatus{max-width:160px}
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(.player-actions,.replay-controls){gap:6px}
+:root body:is(.view-full,.view-theater) #player .player-bottom > button,
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(.player-actions,.replay-controls) :is(button,select){
+  background:transparent;color:#f8f9fc;border:1px solid transparent;
+  border-radius:6px;box-shadow:none;text-shadow:inherit;font-size:12px;padding:5px 7px;
+}
+:root body:is(.view-full,.view-theater) #player .player-bottom > button:is(:hover,:focus-visible),
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(.player-actions,.replay-controls) :is(button,select):is(:hover,:focus-visible){background:#ffffff20;border-color:#ffffff26}
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(button,select,input):focus-visible{outline:2px solid var(--overlay-accent);outline-offset:2px}
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(.replay-controls,.player-actions) input[type=range]{accent-color:var(--overlay-accent)}
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(.replay-controls,.player-actions) select option{background:#20252e;color:#f8f9fc;text-shadow:none}
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(#mute[aria-pressed=true],#theater[aria-pressed=true],#recordButton.recording){color:var(--overlay-accent)}
+:root body:is(.view-full,.view-theater) #player .player-bottom :is(.player-actions,.replay-controls) :disabled,
+:root body:is(.view-full,.view-theater) #player .player-bottom > button:disabled{opacity:.55}
+
+/* The existing composer moves here in fullscreen, preserving drafts and targets. */
+:root .view-full #player .player-bottom #videoStatus{display:none}
+:root .view-full #player .player-bottom #playStatus{max-width:140px;font-size:11px}
+:root .view-full #sendChatForm{
+  position:relative;display:flex;align-items:center;gap:4px;
+  flex:1 1 320px;min-width:270px;max-width:420px;
+  margin:0 4px;padding:3px 5px;border:1px solid #ffffff2b;border-radius:18px;
+  background:#ffffff1f;color:#f8f9fc;text-shadow:none;
+}
+:root .view-full #sendChatForm:focus-within{background:#18202edb;border-color:#ffffff70}
+:root .view-full #sendChatForm > label{flex:0 0 80px;min-width:0;gap:0;margin:0}
+:root .view-full #sendChatForm .send-target-label{display:none}
+:root .view-full #sendTarget{
+  width:100%;max-width:100%;min-width:0;flex:1;
+  background:transparent;color:#f8f9fc;border:0;border-right:1px solid #ffffff30;
+  border-radius:0;padding:3px;font-size:11px;text-overflow:ellipsis;
+}
+:root .view-full #sendTarget option{background:#20252e;color:#f8f9fc}
+:root .view-full #sendChatForm .compose-row{flex:1;min-width:0;margin:0;gap:3px;align-items:center}
+:root .view-full #sendChatForm #chatText{
+  min-width:40px;height:27px;padding:3px 4px;border:0;border-radius:3px;
+  background:transparent;color:#fff;font-size:12px;line-height:21px;box-shadow:none;
+}
+:root .view-full #sendChatForm #chatText::placeholder{color:#eceff5;opacity:1}
+:root .view-full #sendChatForm #chatText:focus-visible{outline:0}
+:root .view-full #sendChatForm #emoteButton{height:27px;min-width:25px;padding:0 3px!important;background:transparent;color:#fff;border:0}
+:root .view-full #sendChatForm #sendChat{
+  height:27px;padding:3px 11px;border:0;border-radius:14px;line-height:21px;font-size:12px;
+  background:var(--overlay-accent);color:#10202b;text-shadow:none;white-space:nowrap;
+}
+:root .view-full #sendChatForm #sendChat:disabled{background:#ffffff26;color:#d9dfe8;opacity:1}
+:root .view-full #sendChatForm #sendChat:not(:disabled):hover{filter:brightness(1.13)}
+:root .view-full #sendStatus:not(:empty){
+  position:absolute;left:0;bottom:calc(100% + 9px);width:max-content;max-width:min(420px,80vw);
+  min-height:0;margin:0;padding:7px 10px;border:1px solid #ffffff24;border-radius:9px;
+  background:#161d29f2;color:#f4f6fa;font-size:11px;line-height:1.5;box-shadow:0 3px 15px #0003;
+}
+:root .view-full #sendStatus button{background:#ffffff20;color:#fff;border-color:#ffffff36}
+:root .view-full #emotePicker{bottom:calc(100% + 10px);text-shadow:none;color-scheme:normal}
+:root .view-full #sendChatForm:has(#emotePicker:not([hidden])) #sendStatus{display:none}
+:root .view-full #emotePicker :is(button,small){text-shadow:none}
+@media(max-width:1350px){
+  :root .view-full #player .player-bottom #playStatus{max-width:105px}
+  :root .view-full #sendChatForm{flex-basis:290px;max-width:350px}
+  :root body:is(.view-full,.view-theater) #player .player-bottom #videoStatus{display:none}
+  :root body:is(.view-full,.view-theater) #player .player-bottom .player-actions{gap:3px}
+}
+@media(max-width:1050px){
+  :root .view-full #player .player-bottom .player-actions{flex:1 1 100%;justify-content:flex-end}
+  :root .view-full #sendChatForm{flex:1;max-width:480px}
+}

@@ -1,0 +1,55 @@
+/* Source identity: editable address above, broadcast title and anchor below. */
+.source-heading{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;min-width:0}
+.source-heading .source-label{white-space:nowrap;margin:0}
+:root[data-theme] .connection-panel .source .source-heading input{min-width:0;width:100%;font-size:13px;line-height:22px;padding:2px 0;border-color:var(--line);text-overflow:ellipsis}
+.connection-panel .source-fields{gap:3px;align-self:center;overflow:hidden;text-align:left}
+.connection-panel .source-heading{margin-bottom:3px}
+.source-live-title{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;font-size:15px;line-height:1.5;font-weight:600;color:var(--text)}
+.connection-panel .room-title{text-align:left;font-size:12px;line-height:1.5;color:var(--muted)}
+.room-audience-panel[hidden],.source-live-title[hidden],.room-title[hidden],.room-audience-panel>[hidden]{display:none!important}
+:root[data-theme] .connection-panel .source{grid-template-columns:44px minmax(160px,1fr) 216px;align-items:center}
+:root[data-theme=bluepink] .connection-panel .source{grid-template-columns:44px minmax(160px,1fr) 248px}
+.connection-panel .source-quality-row{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:center;gap:10px;min-width:0;width:100%}
+.connection-panel .source-quality-row .quality-label{min-width:0;white-space:nowrap}
+:root[data-theme] .connection-panel .source-quality-row select{flex:1;min-width:0;width:100%;max-width:100%;text-overflow:ellipsis}
+:root[data-theme=bluepink] .source[data-source=a] .source-label{color:#0e7fb0}
+:root[data-theme=bluepink] .source[data-source=b] .source-label{color:#b64575}
+:root[data-theme=bluepink] #chatList{background:linear-gradient(160deg,#f4fbffec,#fff4f9e8);color:#263e50}
+:root[data-theme=bluepink] #chatList .chat-row[data-source=a] .username{color:#087fae}
+:root[data-theme=bluepink] #chatList .chat-row[data-source=b] .username{color:#b83e73}
+:root[data-theme=bluepink] .room-audience-panel{background:#f8fcffcf}
+:root[data-theme=bluepink] .brand-icon{filter:none;opacity:1}
+:root[data-theme=bluepink] .source-avatar{border-radius:50%;background:var(--soft);border-color:var(--line)}
+:root[data-theme=bluepink] .player{container-type:inline-size}
+
+/* Settings stay readable over video, with the active palette's surface. */
+:root{--settings-panel:#202630;--settings-ink:#edf2f8;--settings-muted:#b1bdce;--settings-line:#3c4859;--settings-control:#2b3442;--settings-hover:#354255;--settings-accent:#c8f583;--settings-shadow:0 12px 40px #0005}
+:root[data-theme=light]{--settings-panel:#fcfdfd;--settings-ink:#26313e;--settings-muted:#626d7d;--settings-line:#dce2e9;--settings-control:#f1f4f7;--settings-hover:#e6ecf1;--settings-accent:#327252;--settings-shadow:0 12px 40px #24344324}
+:root[data-theme=bilibili]{--settings-panel:#fbfdff;--settings-ink:#303744;--settings-muted:#636e7b;--settings-line:#dce6ed;--settings-control:#f1f7fa;--settings-hover:#e6f2f8;--settings-accent:#007fa3;--settings-shadow:0 12px 40px #28465b30}
+:root[data-theme=bluepink]{--settings-panel:linear-gradient(145deg,#f4fbff 20%,#fff3f9);--settings-ink:#17394a;--settings-muted:#5b7184;--settings-line:#d4e5ef;--settings-control:#ffffffc9;--settings-hover:#fceaf2;--settings-accent:#0e7fb0;--settings-shadow:0 12px 40px #397b9c2b}
+:root[data-theme] #danmakuSettings{width:360px;max-width:calc(100% - 24px);padding:14px;background:var(--settings-panel);color:var(--settings-ink);border:1px solid var(--settings-line);border-radius:16px;box-shadow:var(--settings-shadow);backdrop-filter:none;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--settings-line) transparent;--text:var(--settings-ink);--muted:var(--settings-muted);--line:var(--settings-line);--control:var(--settings-control);--a:var(--settings-accent)}
+#danmakuSettings .danmaku-settings-heading{margin:0 0 12px;gap:12px}
+#danmakuSettings,#danmakuSettings *{text-shadow:none}
+#danmakuSettings .danmaku-settings-heading strong{font-size:15px;line-height:28px}
+:root #danmakuSettings .danmaku-settings-heading button{display:grid;place-items:center;min-height:28px;width:28px;height:28px;padding:0;font:20px/1 sans-serif;border:0;border-radius:8px;background:transparent;color:var(--settings-muted)}
+:root #danmakuSettings button:hover{background:var(--settings-hover)}
+.danmaku-sliders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;margin-bottom:10px}
+#danmakuSettings .danmaku-control{min-width:0}
+#danmakuSettings label{font-size:12px;line-height:22px;gap:8px}
+#danmakuSettings output{color:var(--settings-accent);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#danmakuSettings input[type=range]{width:100%;height:24px;min-height:24px;margin:2px 0;accent-color:var(--settings-accent)}
+#danmakuSettings input[type=range]:focus-visible{outline:0;box-shadow:0 0 0 2px var(--settings-accent);border-radius:6px}
+#danmakuSettings .danmaku-setting-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px;margin:4px 0}
+#danmakuSettings .danmaku-setting-row label{margin:0;white-space:nowrap}
+:root #danmakuSettings select{min-width:120px;max-width:150px;padding:5px 9px;font-size:12px;line-height:20px;background:var(--settings-control);color:var(--settings-ink);border-color:var(--settings-line);border-radius:8px}
+.danmaku-tool-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+:root #danmakuSettings button{min-height:32px;margin:0;font-size:12px;line-height:20px;padding:5px 8px;border-radius:8px;white-space:nowrap;background:var(--settings-control);color:var(--settings-ink);border-color:var(--settings-line)}
+#danmakuSettings #manageBlocked{grid-column:1/-1}
+.danmaku-sc-settings{border-top:1px solid var(--settings-line);padding-top:8px;margin-top:10px}
+#danmakuSettings .sc-toggle{justify-content:flex-start;gap:9px;margin:0 0 8px;min-height:26px}
+#danmakuSettings .sc-toggle input{flex-shrink:0}
+#danmakuSettings .sc-position-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 8px}
+.danmaku-settings-footer{display:flex;justify-content:flex-end;border-top:1px solid var(--settings-line);padding-top:10px;margin-top:10px}
+:root #danmakuSettings #resetDanmakuStyle{background:transparent;color:var(--settings-muted);min-height:28px;padding:3px 8px}
+@media(max-width:1250px){:root[data-theme] .connection-panel .source{grid-template-columns:44px minmax(0,1fr)}.source-heading{gap:8px}.source-live-title{font-size:14px}}
+@media(max-width:650px){.source-heading{grid-template-columns:auto minmax(0,1fr)}.source-live-title{font-size:13px}}

@@ -1,0 +1,10 @@
+.player-bottom{flex-wrap:wrap;row-gap:8px}
+.replay-controls{display:flex;align-items:center;gap:8px;flex:0 0 100%;min-width:0;pointer-events:auto;color:#dbe1e9;font-size:11px}
+.replay-controls label{display:flex;gap:5px;align-items:center;white-space:nowrap}
+.replay-controls select{background:#222630;color:#eee;border:1px solid #59616f;border-radius:5px;padding:3px;font-size:11px;max-width:85px}
+.replay-controls #replayPosition{flex:1;min-width:40px;width:0;margin:0;accent-color:#a5dafa}
+.replay-controls output{min-width:40px;font-variant-numeric:tabular-nums;text-align:center}
+.replay-controls button,.replay-controls #replayRange{white-space:nowrap}
+.replay-controls.replaying #replayTime{color:#b8e8ff}
+#danmaku{bottom:100px}
+@media(max-width:1100px){.replay-controls{gap:5px}.replay-controls #replayRange{display:none}}

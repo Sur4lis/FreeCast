@@ -1,0 +1,24 @@
+.chat-connection{display:flex;gap:6px;align-items:flex-start;border-bottom:1px solid var(--line);padding:0 12px 10px}.chat-connection .chat-status{border:0;padding:0;flex:1;overflow-wrap:anywhere;min-width:0}.chat-connection button{flex-shrink:0;font-size:10px;padding:3px 5px}.blockable-user{cursor:pointer;border-radius:3px}.blockable-user:hover{text-decoration:underline}.blockable-user:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+#blockedDialog{max-width:calc(100vw - 28px);max-height:80vh;width:460px;overflow:auto}#blockUserForm label{font-size:12px;color:var(--muted)}.block-add{display:flex;gap:8px;margin-top:8px}.block-add input{min-width:0;flex:1;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:6px;padding:8px}.block-add .primary{min-width:65px;padding:8px}#blockedList{max-height:36vh;overflow:auto}.blocked-row{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:10px 0}.blocked-row span{min-width:0;overflow-wrap:anywhere;font-size:12px}.blocked-row button{flex-shrink:0;font-size:11px}#blockStatus{min-height:18px}#manageBlocked{margin-top:8px}
+.view-full .player-top,.view-full .player-bottom,.view-full #miniPanel .mini-heading,.view-full #miniPanel .mini-timeline{transition:opacity .35s ease}.view-full.full-ui-idle .player-top,.view-full.full-ui-idle .player-bottom{opacity:0;pointer-events:none}.view-full.full-ui-idle .player-bottom *{pointer-events:none}.view-full.full-ui-idle #miniPanel:not(:hover) .mini-heading,.view-full.full-ui-idle #miniPanel:not(:hover) .mini-timeline{opacity:0;pointer-events:none}.view-full.full-ui-idle .player{cursor:none}.view-full.full-ui-idle #miniPanel{cursor:default}
+@media(prefers-reduced-motion:reduce){.view-full .player-top,.view-full .player-bottom,.view-full #miniPanel .mini-heading,.view-full #miniPanel .mini-timeline{transition:none}}
+
+.view-theater .player-top,.view-theater .player-bottom{transition:opacity .35s ease}.view-theater.full-ui-idle .player-top,.view-theater.full-ui-idle .player-bottom{opacity:0;pointer-events:none}.view-theater.full-ui-idle .player-bottom *{pointer-events:none}.view-theater.full-ui-idle .player{cursor:none}@media(prefers-reduced-motion:reduce){.view-theater .player-top,.view-theater .player-bottom{transition:none}}
+
+.room-audience{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.6;overflow-wrap:anywhere}.room-audience-panel{display:flex;flex-direction:column;gap:5px;padding:0 15px 10px;color:var(--muted);font-size:11px;flex-shrink:0}.player-top #mainAudience{max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.player-top #mainAudience[hidden]{display:none}
+
+/* Keep sidebar chrome compact; the message history receives the freed space. */
+.chat-panel .chat-heading{padding:8px 12px;min-height:38px;gap:8px;flex-shrink:0}
+.chat-panel .chat-heading h2{margin:0;font-size:14px;min-width:0;flex:1}
+.chat-panel .chat-heading .toggle{flex-shrink:0;white-space:nowrap}
+.room-audience-panel{flex-direction:row;flex-wrap:wrap;gap:2px 12px;padding:4px 12px;font-size:10px;line-height:1.5}
+.chat-panel .chat-connection{padding:2px 12px 6px;align-items:center;flex-shrink:0}
+.chat-panel .chat-connection .chat-status{padding:0;line-height:1.4;font-size:10px}
+.chat-compose{padding:7px 12px}
+.chat-compose .compose-row{margin:6px 0 0}
+.chat-compose #sendStatus{min-height:0;margin-top:5px}
+.chat-compose #sendStatus:empty{display:none}
+.room-profile{font-size:11px;color:var(--text);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.room-profile[hidden]{display:none}
+
+.player-top,.player-bottom{transition:opacity .35s ease}.full-ui-idle .player-top,.full-ui-idle .player-bottom{opacity:0;pointer-events:none}.full-ui-idle .player-bottom *{pointer-events:none}.full-ui-idle .player{cursor:none}@media(prefers-reduced-motion:reduce){.player-top,.player-bottom{transition:none}}
+.favorite.favorite-dragging{opacity:.45}.favorite.drop-before{box-shadow:-4px 0 0 var(--a)}.favorite.drop-after{box-shadow:4px 0 0 var(--a)}.favorite-main[draggable=true]{cursor:grab}.favorite-dragging .favorite-main{cursor:grabbing}

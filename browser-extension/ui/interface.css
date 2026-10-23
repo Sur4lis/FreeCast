@@ -1,0 +1,53 @@
+.player-controls-home .player-bottom{position:relative;inset:auto;padding:12px 14px;background:var(--panel);border:1px solid var(--player-edge);border-top:0;border-radius:0 0 12px 12px;color:var(--text);opacity:1!important;pointer-events:auto!important;transition:none}
+.player-controls-home .player-bottom *{pointer-events:auto!important}.player-controls-home .player-bottom button,.player-controls-home .player-bottom select{background:var(--control,#252831);color:var(--text);border-color:var(--line)}.player-controls-home .replay-controls{color:var(--muted)}
+body:not(.view-theater):not(.view-full) .player{border-radius:12px 12px 0 0}body:not(.view-theater):not(.view-full) #danmaku{inset:12px}
+.view-theater #playerControlsHome,.view-full #playerControlsHome{display:none}#videoStatus{color:inherit;opacity:.78;font-size:10px;white-space:nowrap}#playStatus{max-width:30%}
+.offset-value input{width:128px;text-align:center;font:34px/1.2 Consolas,monospace;background:transparent;color:var(--text);border:1px solid transparent;border-radius:8px;padding:3px 0;-moz-appearance:textfield}.offset-value input:hover{border-color:var(--line)}.offset-value input::-webkit-inner-spin-button,.offset-value input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.range-labels{gap:14px;font-size:12px}.sync-panel{padding:16px 20px}.panel-heading .eyebrow{display:none}
+#placeholder .player-tutorial{width:min(480px,90%);padding:20px;border:1px solid var(--tutorial-border);border-radius:18px;background:var(--tutorial-surface);color:var(--tutorial-text);box-shadow:var(--tutorial-shadow)}#placeholder h2{font-weight:600;font-size:20px;text-align:left;margin-bottom:22px}#placeholder ol{list-style:none;padding:0;margin:0;display:grid;gap:18px}#placeholder li{display:flex;align-items:flex-start;gap:12px}#placeholder li>span{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:10px;background:var(--tutorial-step-bg);color:var(--tutorial-step-text);font-size:13px;font-weight:700}#placeholder strong{font-size:13px;font-weight:600}#placeholder li p{font-size:12px;line-height:1.7;margin:4px 0 0;color:var(--tutorial-muted)}
+.superchat-card{border-radius:17px;margin-bottom:7px;box-shadow:0 2px 8px #0000000c;backdrop-filter:blur(7px);text-shadow:0 1px 2px #0002}.superchat-card .superchat-heading{padding:6px 9px 0;background:transparent!important;gap:6px;font-size:11px;line-height:1.4}.superchat-card .superchat-avatar{width:20px;height:20px;border:1px solid #ffffff65}.superchat-card .superchat-user{font-weight:600;color:inherit}.superchat-card .superchat-message{font-size:12px;line-height:1.55;padding:3px 10px 8px}.pinned-superchat .superchat-message{-webkit-line-clamp:3}.superchat-card .chat-emote{height:1.2em}
+#superChatOverlay{left:10px;top:12px;width:250px;max-width:34%;max-height:35%;font-size:12px}
+@media(max-width:1100px){.player-controls-home .player-actions{flex-wrap:wrap}#videoStatus{max-width:42%;overflow:hidden;text-overflow:ellipsis}.range-labels{font-size:10px}#superChatOverlay{width:220px;max-width:40%}#placeholder .player-tutorial{padding:14px}#placeholder ol{gap:12px}#placeholder h2{font-size:17px;margin-bottom:14px}}
+
+/* Compact setup; related labels share the same baseline. */
+header{height:auto;min-height:60px;padding-top:10px;padding-bottom:10px}
+main,:root[data-theme=bilibili] main{padding-top:18px}
+.setup-toolbar{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 14px;margin-bottom:12px}
+:root .setup-toolbar .favorites-bar{flex:1;min-width:0;gap:10px;margin:0;padding:0;min-height:0;border:0;border-radius:0;background:none;box-shadow:none}
+.setup-toolbar .favorites-label{font-size:13px;line-height:20px}.setup-toolbar .favorites-label small{display:none}
+.setup-toolbar #favorites{padding:11px 8px 4px;gap:10px}.setup-toolbar .favorite-main{padding:6px 8px;min-height:42px}.setup-toolbar .favorite-main img{width:30px;height:30px}
+.setup-toolbar .favorite-remove{position:absolute;right:-4px;top:-9px;z-index:1;display:grid;place-items:center;width:16px;height:16px;min-width:16px;min-height:16px;margin:0;padding:0!important;border-radius:50%;font:12px/1 Arial,sans-serif;background:var(--control,#252831);color:var(--muted);box-shadow:0 1px 3px #0000000c}
+.setup-toolbar .favorite-remove:focus-visible{outline-offset:1px}
+.setup-toolbar #addFavorite{font-size:12px;line-height:20px;padding:5px 10px;min-height:32px;white-space:nowrap}
+.setup-toolbar .platform-summary{margin-left:auto;color:var(--muted);font-size:12px;line-height:20px;white-space:nowrap;flex-shrink:0}
+.connection-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px}
+:root .connection-panel .sources{border:0;border-radius:0;margin:0;padding:14px 18px;background:none;box-shadow:none;gap:18px;flex-wrap:nowrap}
+.connection-panel .source{display:grid;grid-template-columns:44px minmax(110px,1fr) 216px;gap:12px;align-items:start;flex:1 1 0}
+.connection-panel .source-avatar{align-self:center;width:44px;height:44px}.connection-panel .source-fields{min-width:0;gap:2px}
+.connection-panel .source-label,.connection-panel .source-toggles label{font-size:14px;line-height:22px}.connection-panel .source-options{width:auto;min-width:0;padding:0;margin:0;gap:7px}
+.connection-panel .source-toggles{min-height:22px;gap:10px}.connection-panel .source-options .quality-label,.connection-panel .source-volume{font-size:12px;line-height:20px}
+.source-quality-row{display:flex;align-items:center;gap:10px;min-width:0;min-height:29px}.connection-panel .source-options .quality-label{gap:6px}
+.connection-panel .quality-label select{font-size:12px;padding:3px 5px}.connection-panel .quality-actual{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.connection-panel .room-title,.connection-panel .room-audience{font-size:11px;line-height:16px;margin-top:0}
+.connection-panel .source input:not([type=checkbox]):not([type=range]){font-size:16px;line-height:24px;padding:3px 0}
+.source-volume{display:flex;align-items:center;gap:9px;color:var(--muted)}.source .source-volume input{width:115px;padding:0;margin:0;border:0;height:16px;accent-color:var(--a)}
+.source-footer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:46px;padding:8px 18px;border-top:1px solid var(--line);background:var(--soft,#ffffff03)}
+.source-footer .filter-switch{display:flex;align-items:center;gap:5px;font-size:13px;line-height:20px}.source-footer #filterStatus{font-size:12px;line-height:20px;color:var(--muted);max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.source-footer #toggleAudioSettings{font-size:12px;line-height:20px;padding:4px 10px;min-height:30px}
+.source-footer .configuration-bar{display:flex;align-items:center;gap:10px;margin-left:auto;white-space:nowrap;flex-shrink:0;font-size:13px;line-height:20px}.configuration-bar label{font-weight:600}
+.configuration-bar select{min-width:120px;height:32px;font-size:13px;line-height:20px;padding:4px 9px;border:1px solid var(--line);border-radius:7px;background:var(--control,#252831);color:var(--text)}
+.connection-panel .filter-panel{margin:0;border:0;border-top:1px solid var(--line);border-radius:0;padding:10px 18px;gap:14px}.connection-panel .filter-panel[hidden]{display:none}
+@media(max-width:1250px){
+ .connection-panel .source{grid-template-columns:44px minmax(0,1fr)}.connection-panel .source-options{grid-column:2;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px}.connection-panel .source-toggles{grid-column:1/-1}.connection-panel .source-volume input{width:90px}.source-footer #filterStatus{max-width:38%}
+}
+@media(max-width:1100px){
+ :root .connection-panel .sources{gap:12px}.connection-panel #connect{min-width:100px;padding:11px}
+}
+@media(max-width:950px){
+ .setup-toolbar .platform-summary{font-size:11px}.connection-panel .source-options{grid-template-columns:1fr}.connection-panel .source-toggles{gap:8px}.connection-panel .source-toggles label{font-size:13px}.source-footer #filterStatus{font-size:11px}.connection-panel #connect{min-width:80px;font-size:12px}
+}
+@media(max-width:700px){
+ :root .setup-toolbar .favorites-bar{flex-wrap:wrap}.setup-toolbar .platform-summary{margin-left:auto}.source-footer #filterStatus{max-width:60%}.source-footer .configuration-bar{margin-left:0}
+}
+@media(max-width:650px){
+ header{height:auto;min-height:60px;flex-wrap:wrap;gap:8px;padding:10px 16px}.header-right{flex-wrap:wrap}:root .connection-panel .sources{flex-wrap:wrap}.connection-panel .source{flex-basis:100%}
+}

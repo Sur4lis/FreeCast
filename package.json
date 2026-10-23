@@ -1,0 +1,12 @@
+{
+  "name": "freecast-extension",
+  "version": "1.20.0",
+  "private": true,
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "prepare:assets": "node scripts/prepare-assets.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "pack": "node scripts/pack.cjs"
+  },
+  "devDependencies": { "adm-zip": "0.5.16" }
+}

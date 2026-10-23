@@ -1,0 +1,35 @@
+FreeCast 第三方依赖与许可
+
+播放依赖 hls.js 1.7.3、mpegts.js 1.8.2（Apache-2.0）。
+推理依赖 ONNX Runtime Web 1.30.0（MIT）：https://github.com/microsoft/onnxruntime
+FFT 依赖 fft.js 4.0.4（MIT，ESM 导出转换）：https://github.com/indutny/fft.js
+许可证见 vendor 文件夹。
+
+模型：UVR-MDX-NET-Inst_HQ_3.onnx
+来源：https://github.com/TRvlvr/model_repo/releases/tag/all_public_uvr_models
+参数参考：https://github.com/Anjok07/ultimatevocalremovergui
+SHA256：317554b07fe1ea5279a77f2b1520a41ea4b93432560c4ffd08792c30fddf9adc
+模型为第三方资产，本应用免费使用不改变模型原作者的权利。
+模型主要面向音乐人声分离，并非专门训练的游戏解说分离模型，效果因内容而异。
+
+本软件不隶属于哔哩哔哩、直播间或赛事主办方，直播内容与头像权利归相应权利人。
+
+多平台适配：请求格式与部分算法参考 Streamlink (BSD-2-Clause)。
+来源：https://github.com/streamlink/streamlink
+原作者：Christopher Rosell、Streamlink Team。完整许可证见 vendor/streamlink-LICENSE.txt。
+
+抖音 Webcast 本地签名：移植自 jwwsjlm/douyinLive internal/webcastsign/native.go（MIT）。
+Copyright (c) 2025 今晚打打。许可证：vendor/douyinLive-LICENSE.txt。
+来源：https://github.com/jwwsjlm/douyinLive/tree/main/internal/webcastsign
+
+弹幕数据格式参考公开协议实现，接收器与有限长二进制解码器在本项目实现：
+虎牙：https://github.com/yjqiang/danmu/tree/master/examples/huya
+斗鱼：https://github.com/flxxyz/douyudm
+抖音字段：https://github.com/xiaoyaocz/dart_simple_live/blob/master/simple_live_core/lib/src/danmaku/proto/douyin.proto
+
+MP4 封装与 WebCodecs 接入：Mediabunny 1.61.3（Mozilla Public License 2.0）。
+Copyright (c) 2026-present, Vanilagy and contributors.
+使用未修改的官方 ESM 构建；许可证：vendor/mediabunny-LICENSE.txt。
+源码：https://github.com/Vanilagy/mediabunny
+对应版本源码包：https://registry.npmjs.org/mediabunny/-/mediabunny-1.61.3.tgz
+

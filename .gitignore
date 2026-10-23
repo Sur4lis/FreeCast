@@ -1,0 +1,6 @@
+node_modules/
+release/
+.cache/
+browser-extension/models/*.onnx
+browser-extension/vendor/ort/*.wasm
+*.log
