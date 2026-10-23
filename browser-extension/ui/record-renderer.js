@@ -1,7 +1,7 @@
 // Render the displayed video geometry and comments without capturing controls.
 (()=>{
   const textures=new WeakMap(),images=new Map();
-  function image(url){let value=images.get(url);if(value)return value.bitmap;value={};images.set(url,value);fetch(url,{credentials:'omit'}).then(r=>{if(!r.ok)throw Error();return r.blob();}).then(createImageBitmap).then(bitmap=>{value.bitmap=bitmap;}).catch(()=>{});if(images.size>100){const old=images.keys().next().value;images.get(old)?.bitmap?.close();images.delete(old);}return null;}
+  function image(url){let value=images.get(url);if(value)return value.bitmap;value={};images.set(url,value);fetch(url,{credentials:'omit'}).then(r=>{if(!r.ok)throw Error();return r.blob();}).then(createImageBitmap).then(bitmap=>{if(images.get(url)===value)value.bitmap=bitmap;else bitmap.close();}).catch(()=>{});if(images.size>100){const old=images.keys().next().value;images.get(old)?.bitmap?.close();images.delete(old);}return null;}
   function texture(el,scale=1){let cached=textures.get(el);const signature=el.textContent+el.offsetWidth+el.offsetHeight+document.documentElement.dataset.theme+':'+scale;if(cached?.signature===signature&&performance.now()-cached.at<1500)return cached.canvas;
     const r=el.getBoundingClientRect(),canvas=document.createElement('canvas');canvas.width=Math.ceil(r.width*scale);canvas.height=Math.ceil(r.height*scale);const ctx=canvas.getContext('2d'),style=getComputedStyle(el);ctx.scale(scale,scale);ctx.fillStyle=style.backgroundColor;ctx.beginPath();ctx.roundRect(0,0,r.width,r.height,parseFloat(style.borderRadius)||0);ctx.fill();
     const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);let n;while((n=walker.nextNode())){

@@ -82,9 +82,19 @@
         };
         ws.onerror=()=>fail('弹幕线路无法连接');
         ws.onclose=event=>{if(!current())return;clearTimeout(this.authTimer);clearInterval(this.heartbeat);this.retry(reason+(event.code&&event.code!==1000?'（'+event.code+'）':''));};
-      }catch(error){if(!this.closed&&revision===this.revision)this.retry(error.message||'弹幕配置获取失败');}
+      }catch(error){if(!this.closed&&revision===this.revision)this.retry(error);}
     }
-    retry(reason){if(this.closed)return;const seconds=Math.min(30,2**Math.min(++this.attempt,5));this.emit({type:'status',text:reason+' · '+seconds+' 秒后重试'});clearTimeout(this.timer);this.timer=setTimeout(()=>this.start(),seconds*1000);}
+    retry(error){
+      if(this.closed)return;clearTimeout(this.timer);this.timer=null;
+      const reason=String(error?.message||error||'弹幕配置获取失败');
+      if(error?.code==='BILIBILI_PERMISSION'||/No host permissions|网站访问权限不足|网站访问未授权|请允许访问直播平台/i.test(reason)){
+        this.emit({type:'status',text:'B 站网站访问未授权，请点击「重连弹幕」并允许访问 bilibili.com；若仍失败，请在扩展设置中允许网站访问后刷新本页。'});return;
+      }
+      if(/\b412\b/.test(reason)){
+        this.emit({type:'status',text:'B 站暂时限制请求（HTTP 412），已暂停自动重试。请打开 B 站直播页完成验证，稍后点击「重连弹幕」。'});return;
+      }
+      const seconds=Math.min(30,2**Math.min(++this.attempt,5));this.emit({type:'status',text:reason+' · '+seconds+' 秒后重试'});this.timer=setTimeout(()=>this.start(),seconds*1000);
+    }
     stop(){this.closed=true;this.revision++;clearTimeout(this.timer);clearTimeout(this.authTimer);clearInterval(this.heartbeat);this.ws?.close();}
   }
   window.BrowserChat=BrowserChat;window.ChatProtocol={packet,decode,normalize,imageUrl};

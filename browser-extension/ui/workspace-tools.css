@@ -50,3 +50,19 @@ body.editing-avoidance .player-bottom{opacity:1;pointer-events:auto}.view-full.f
 .crop-handle.ne,.crop-handle.nw{top:-5px}.crop-handle.se,.crop-handle.sw{bottom:-5px}.crop-handle.ne,.crop-handle.se{right:-5px}.crop-handle.nw,.crop-handle.sw{left:-5px}
 .crop-handle.ne,.crop-handle.sw{cursor:nesw-resize}.crop-handle.nw,.crop-handle.se{cursor:nwse-resize}
 #miniPanel.mini-cropping .mini-heading,#miniPanel.mini-cropping .mini-timeline{opacity:1!important;pointer-events:auto!important}
+
+.keyword-heading{font-size:14px;font-weight:600;margin-bottom:12px}
+.keyword-list,#blockedKeywords{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#blockedKeywords:empty{display:none}
+.keyword-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 5px 4px 11px;background:color-mix(in srgb,var(--a) 9%,var(--panel));border:1px solid var(--line);border-radius:9px;font-size:14px}
+.keyword-chip>span{min-width:0;overflow-wrap:anywhere}
+:root .tools-dialog .keyword-chip button{border:0;background:transparent;padding:0;width:24px;height:24px;flex-shrink:0;font-size:20px;color:var(--muted)}
+:root .tools-dialog .keyword-chip button:hover{background:var(--control);color:var(--text)}
+:root .tools-dialog #addKeyword{width:36px;height:36px;padding:0;font-size:23px;color:var(--a);border-style:dashed}
+#keywordEditor{display:flex;align-items:center;gap:8px;margin-top:10px}
+#keywordEditor[hidden],#addKeyword[hidden]{display:none}
+#keywordStatus{color:var(--muted);font-size:12px;margin-top:6px;min-height:0}
+#keywordStatus:empty{display:none}
+.tools-dialog .merge-setting{border-top:1px solid var(--line);padding-top:18px;margin-top:20px}
+.chat-row[data-source=b] .repeat-count{color:var(--b,var(--a))}
+#danmaku .bullet-repeat-count{display:inline-block;box-sizing:content-box;vertical-align:baseline;width:5ch;margin-left:.35em;padding:0;border:0;border-radius:0;color:inherit;font-family:inherit;font-size:.8em;font-weight:700;text-align:left}

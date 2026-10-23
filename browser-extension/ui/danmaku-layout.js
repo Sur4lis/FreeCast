@@ -22,6 +22,17 @@
     // Reflowing moving comments onto fewer lanes would create collisions. Sidebar history stays intact.
     if(signature&&signature!==key)overlay.replaceChildren();signature=key;maskSC();return g;
   }
+  function speed(bullet){
+    if(typeof bullet.getAnimations==='function'){
+      for(const animation of bullet.getAnimations()){
+        if(typeof animation.updatePlaybackRate==='function')animation.updatePlaybackRate(mix.danmakuSpeed);
+        else animation.playbackRate=mix.danmakuSpeed;
+      }
+    }else{
+      const duration=Number(bullet.dataset.danmakuDuration);
+      if(duration>0)bullet.style.animationDuration=duration/mix.danmakuSpeed+'s';
+    }
+  }
   function add(bullet){
     const g=layout();if(g.width<1||g.rows<1||overlay.children.length>=Math.ceil(60*mix.danmakuDensity/100))return false;
     const origin=overlay.getBoundingClientRect().left,gap=Math.max(24,mix.danmakuSize)*(100/mix.danmakuDensity),available=[];
@@ -36,10 +47,9 @@
     bullet.style.top=lane*g.line+'px';bullet.style.height=g.line-4+'px';bullet.style.setProperty('--travel',g.width+'px');
     overlay.append(bullet);const width=Math.ceil(bullet.getBoundingClientRect().width);
     // Reserve the measured box so late image errors/font loads cannot grow into the following comment.
-    bullet.style.width=width+'px';bullet.style.animationDuration=((g.width+width)/(g.width/9))+'s';
-    for(const animation of bullet.getAnimations())animation.updatePlaybackRate(mix.danmakuSpeed);
+    bullet.style.width=width+'px';const duration=(g.width+width)/(g.width/9);bullet.dataset.danmakuDuration=duration;bullet.style.animationDuration=duration+'s';speed(bullet);
     bullet.addEventListener('animationend',()=>bullet.remove(),{once:true});return true;
   }
-  window.danmakuLayout={add,layout,maskSC};
+  window.danmakuLayout={add,layout,maskSC,speed};
   new ResizeObserver(maskSC).observe($('superChatOverlay'));
 })();

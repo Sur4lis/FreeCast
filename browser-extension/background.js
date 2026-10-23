@@ -1,4 +1,5 @@
 import { createBackend } from './backend.mjs';
+import { createBilibiliSession } from './bilibili-session.mjs';
 import { createPlatformSender } from './platform-sender.mjs';
 import { createPlatformApi, parseSource, platformNames } from './platforms.mjs';
 const platforms = createPlatformApi(), profiles = new Map(), profileRequests=new Map();
@@ -48,20 +49,7 @@ async function sourceProfile(input) {
   }
   return cached?.profile || {id:src.input,inputId:src.input,external:true,pendingProfile:true,platform:src.platform,name:platformNames[src.platform] + ' · ' + src.url.pathname.slice(1,45),title:platformNames[src.platform] + '直播',avatar:''};
 }
-const cookie = async name => (await chrome.cookies.get({url:'https://live.bilibili.com/',name}))?.value || '';
-let devicePromise;
-async function ensureDevice(){
-  if(await cookie('buvid3'))return;
-  if(!devicePromise)devicePromise=(async()=>{
-    const response=await fetch('https://api.bilibili.com/x/frontend/finger/spi',{credentials:'include',signal:AbortSignal.timeout(12000)});
-    if(!response.ok)throw Error('B 站设备初始化失败，请打开 B 站网页后重连弹幕');
-    const value=await response.json(),buvid=value.data?.b_3;
-    if(value.code!==0||typeof buvid!=='string'||!/^[\w-]{10,100}$/.test(buvid))throw Error('B 站设备校验暂不可用，请打开 B 站网页后重连弹幕');
-    // Use the public device identifier issued by Bilibili; preserve existing cookies and never copy login tokens.
-    if(!await cookie('buvid3'))await chrome.cookies.set({url:'https://live.bilibili.com/',domain:'.bilibili.com',path:'/',name:'buvid3',value:buvid,secure:true,sameSite:'no_restriction',expirationDate:Date.now()/1000+31536000});
-  })().finally(()=>{devicePromise=null;});
-  await devicePromise;
-}
+const {cookie,ensureDevice}=createBilibiliSession({cookies:chrome.cookies,permissions:chrome.permissions});
 const backend = createBackend({ cookie, ensureDevice, cooldownStore: {
   get: async () => (await chrome.storage.session.get('lastDanmakuAt')).lastDanmakuAt || 0,
   set: value => chrome.storage.session.set({lastDanmakuAt:value})
@@ -130,7 +118,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
       case 'login': await chrome.tabs.create({url:'https://www.bilibili.com/'});return true;
       default: throw new Error('不支持的请求');
     }
-  })().then(value=>respond({ok:true,value}),error=>respond({ok:false,error:error.message||'请求失败'}));
+  })().then(value=>respond({ok:true,value}),error=>respond({ok:false,error:error.message||'请求失败',errorCode:error.code}));
   return true;
 });
 chrome.cookies.onChanged.addListener(({cookie:changed})=>{

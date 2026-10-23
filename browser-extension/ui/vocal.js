@@ -15,7 +15,7 @@ const vocalTemplate = {
   reset(reason="reset"){
     this.resets ||= [];this.resets.push({reason,time:this.ctx?.currentTime||0,feed:this.feed?.currentTime||0});if(this.resets.length>30)this.resets.shift();
     this.epoch++;this.ready=false;this.firstSound=Infinity;this.raw=[[],[]];this.samples=0;this.startTime=null;this.lastInputEnd=null;
-    for(const node of this.nodes){try{node.stop();}catch{}}this.nodes.clear();
+    for(const node of this.nodes){try{node.stop();}catch{}node.onended?.();}this.nodes.clear();
     this.timeline=[];this.anchors=[];
     if(this.capture){this.capture.port.postMessage({enabled:this.active&&!this.feed.paused&&this.feed.readyState>=3,epoch:this.epoch});}
   },
@@ -24,7 +24,9 @@ const vocalTemplate = {
     const revision=++this.enableRevision,token=generation;this.loading=true;this.error='';vocal.controls();
     try{
       if(!running||!this.mirror||this.mirror.closed)throw Error('音轨尚未就绪，请连接直播后重试');
+      this.mirror.resume?.();
       await vocal.graph();await this.ctx.resume();
+      if(revision!==this.enableRevision||token!==generation||!running)return;
       const info=await window.live.vocalInit({performanceMode:$('filterPerformance').value,streams:vocal.selectedCount()});
       if(revision!==this.enableRevision)return;
       if(token!==generation||!running)throw Error('直播已切换');
@@ -35,8 +37,8 @@ const vocalTemplate = {
     }catch(error){if(revision===this.enableRevision)this.fail(error);}
     finally{if(revision===this.enableRevision){this.loading=false;vocal.controls();}}
   },
-  disable(){this.enableRevision++;this.loading=false;this.active=false;this.feed?.pause();this.reset();this.clearReplay?.();},
-  fail(error){this.error=String(error.message||error);this.disable();vocal.releaseIfIdle();mix['audio'+this.sourceKey.toUpperCase()]=false;applyMix();updateOffset();save();vocal.controls();},
+  disable(){this.enableRevision++;this.loading=false;this.active=false;this.error='';this.feed?.pause();this.reset();this.clearReplay?.();this.mirror?.suspend?.();},
+  fail(error){this.disable();this.error=String(error.message||error);vocal.releaseIfIdle();applyMix();updateOffset();save();vocal.controls();},
   accept(block){
     if(!this.active||block.epoch!==this.epoch||(paused&&!window.replay?.active))return;
     if(this.lastInputEnd!==null){
@@ -83,19 +85,19 @@ const vocalTemplate = {
     const fade=this.overlap/this.rate,end=when+buffer.duration;
     envelope.gain.setValueAtTime(0,when);envelope.gain.linearRampToValueAtTime(1,when+fade);envelope.gain.setValueAtTime(1,end-fade);envelope.gain.linearRampToValueAtTime(0,end);
     const start=Math.max(when,this.ctx.currentTime+.012),skip=start-when;
-    this.nodes.add(node);node.onended=()=>{this.nodes.delete(node);node.disconnect();envelope.disconnect();};node.start(start,skip);
+    this.nodes.add(node);node.onended=()=>{this.nodes.delete(node);node.disconnect();envelope.disconnect();node.buffer=null;node.onended=null;};node.start(start,skip);
     return buffer;
   },
   ensureFeed(key=this.sourceKey){if(this.feeds[key])return;const feed=this.feeds[key]=document.createElement('audio');feed.id='filterAudioFeed'+key.toUpperCase();feed.preload='auto';$('mediaParking').append(feed);},
   detachMirror(key=this.sourceKey){this.mirrors[key]?.close();delete this.mirrors[key];if(key===this.sourceKey){this.feedStarted=false;if(this.active)this.reset();}},
-  newMirror(key){this.ensureFeed(key);this.detachMirror(key);const mirror=new AudioMirror(this.feeds[key],e=>{if(key!==this.sourceKey)return;if(this.active)this.fail(e);else this.error=e.message;});this.mirrors[key]=mirror;return mirror;},
+  newMirror(key){this.ensureFeed(key);this.detachMirror(key);const mirror=new AudioMirror(this.feeds[key],e=>{if(key!==this.sourceKey)return;if(this.active)this.fail(e);else this.error=e.message;});this.mirrors[key]=mirror;if(this.active||this.loading)mirror.resume();return mirror;},
   attachFLV(engine,key=this.sourceKey){
     this.transports[key]='flv';
     const mirror=this.newMirror(key),mse=engine._player_engine?._mse_controller;
     // Adapter pinned to mpegts.js 1.8.2; fail explicitly if its API changes.
     if(!mse?.appendInitSegment||!mse?.appendMediaSegment){mirror.fail('当前 FLV 引擎不支持音频预处理');return;}
     const init=mse.appendInitSegment,append=mse.appendMediaSegment;
-    mse.appendInitSegment=function(segment,deferred){if(segment.type==='audio'&&!deferred)mirror.push(segment.data,segment.container+(segment.codec?';codecs="'+segment.codec+'"':''));return init.call(this,segment,deferred);};
+    mse.appendInitSegment=function(segment,deferred){if(segment.type==='audio'&&!deferred)mirror.push(segment.data,segment.container+(segment.codec?';codecs="'+segment.codec+'"':''),undefined,true);return init.call(this,segment,deferred);};
     mse.appendMediaSegment=function(segment){if(segment.type==='audio')mirror.push(segment.data,null,Number.isFinite(segment.timestampOffset)?segment.timestampOffset/1000:undefined);return append.call(this,segment);};
   },
   attachHLS(engine,key=this.sourceKey){this.transports[key]='hls';const mirror=this.newMirror(key);let mime;

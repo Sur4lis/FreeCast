@@ -33,7 +33,8 @@
   },true);
   $('retryChat').addEventListener('click',async()=>{
     if(!running){$('chatStatus').textContent='请先连接直播';return;}
-    $('retryChat').disabled=true;try{await Promise.all(['a','b'].map(refreshChat));}finally{$('retryChat').disabled=false;}
+    const token=generation,rooms=['a','b'].filter(k=>mix['chat'+k.toUpperCase()]&&channels[k]?.room).map(k=>channels[k].room.id);
+    $('retryChat').disabled=true;try{await window.live.ensureSources(rooms);if(token!==generation||!running)return;await Promise.all(['a','b'].map(refreshChat));}catch(error){if(token===generation&&running)notice(error.message,true);}finally{$('retryChat').disabled=false;}
   });
   window.playerUI={wake,layout};viewChanged();
 })();

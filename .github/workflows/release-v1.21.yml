@@ -1,0 +1,28 @@
+name: Release v1.21
+on:
+  push:
+    branches: [main]
+    paths: [releases/v1.21.md]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-v1.21
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - run: npm ci --ignore-scripts
+      - run: npm run prepare:assets
+      - run: npm test
+      - run: npm run pack
+      - run: node scripts/publish-v1.21.cjs
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -193,12 +193,18 @@ async function refreshChat(key) {
   if (running && !demo && mix['chat' + key.toUpperCase()] && channels[key]) await window.live.startChat(channels[key].room.id, key);
 }
 for (const key of ['A', 'B']) {
+  let toggleRevision=0;
   renderQualities(key);
   $('quality' + key).addEventListener('change', async () => {
     mix['quality' + key] = Number($('quality' + key).value); save();
     if (running && !demo && !$('connect').disabled) await connect();
   });
-  $('chatToggle' + key).addEventListener('change', () => { mix['chat' + key] = $('chatToggle' + key).checked; save(); refreshChat(key.toLowerCase()).catch(error => notice(error.message, true)); });
+  $('chatToggle' + key).addEventListener('change', async () => {
+    const source=key.toLowerCase(),enabled=$('chatToggle'+key).checked,token=generation,revision=++toggleRevision;mix['chat'+key]=enabled;save();
+    const current=()=>token===generation&&revision===toggleRevision;
+    try{if(enabled&&running&&!demo&&channels[source])await window.live.ensureSources([channels[source].room.id]);if(current())await refreshChat(source);}
+    catch(error){if(current()){chatStates[source]=error.message;renderChatStatus();notice(error.message,true);}}
+  });
 }
 function setMiniZoom(enabled) {
   $('miniPanel').classList.toggle('enlarged', enabled);

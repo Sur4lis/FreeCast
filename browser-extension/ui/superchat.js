@@ -16,6 +16,7 @@
     const img=document.createElement('img');img.src=ChatProtocol.imageUrl(message.avatar)||'assets/avatar.svg';img.alt='';img.className='superchat-avatar';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{img.src='assets/avatar.svg';},{once:true});heading.append(img);
     const user=document.createElement('span');user.className='superchat-user';user.textContent=message.user;user.title=message.uid?'UID '+message.uid:'';
     window.chatBlocking?.tag(el,message);
+    window.chatRules?.tag(el,message);
     heading.append(user);
     const text=document.createElement('button');text.type='button';text.className='superchat-message';text.title='点击复制留言内容';ChatContent.append(text,message);
     text.addEventListener('click',async()=>{if(window.scPosition?.moved())return;try{await navigator.clipboard.writeText(String(message.text||''));text.title='已复制';notice('已复制 SC 内容');}catch{notice('复制失败，请重试',true);}});
@@ -44,7 +45,7 @@
   }
   function tick(){
     const extra=Number($('chatOffset').value)||0;
-    for(const [id,m] of active)if(window.chatBlocking?.isBlocked(m))active.delete(id);
+    for(const [id,m] of active)if(window.chatBlocking?.isBlocked(m)||window.chatRules?.blocked(m))active.delete(id);
     for(const [id,m] of active){const media=channels[m.source]?.media;if(media&&media.currentTime>=m.at+duration(m)+extra)active.delete(id);}
     overlay.hidden=!mix.showSC||!mix.showChat;
     const visible=[...active.values()].slice(-2),wanted=new Set(visible.map(key));
