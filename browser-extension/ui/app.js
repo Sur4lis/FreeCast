@@ -7,7 +7,9 @@ let channels = {}, running = false, paused = false, demo = false, generation = 0
 let connecting = null;
 let offset = 0, pauseStarted = 0, pauseLag = 0, demoStart = 0, demoPaused = 0, lastDemoMessage = -1;
 let audioContext, oscillator, gain, lane = 0;
-const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50 });
+const selfDanmakuColors = Object.freeze({ '#ffffff': '白色（默认）', '#ff6b6b': '珊瑚红', '#ffb347': '橙色', '#ffd866': '金黄色', '#80ed99': '绿色', '#66d9ef': '天蓝色', '#c7a0ff': '紫色', '#ff99cc': '粉色' });
+function normalizeSelfDanmakuColor(value) { const color = typeof value === 'string' ? value.toLowerCase() : ''; return Object.hasOwn(selfDanmakuColors, color) ? color : '#ffffff'; }
+const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50, selfDanmakuColor: '#ffffff' });
 let mix = {...defaultMix};
 let favorites = [], activeSource = 'a', viewMode = 'normal';
 const defaultFavorites = [
@@ -48,6 +50,7 @@ try {
     if([0,10,15,30,60,120,300].includes(s.mix?.scMaxDuration))mix.scMaxDuration=s.mix.scMaxDuration;
     if(Number.isFinite(s.mix?.danmakuDensity))mix.danmakuDensity=clamp(Math.round(s.mix.danmakuDensity),20,100);
     if([25,50,75,100].includes(s.mix?.danmakuArea))mix.danmakuArea=s.mix.danmakuArea;
+    mix.selfDanmakuColor = normalizeSelfDanmakuColor(s.mix?.selfDanmakuColor);
     mix.main = s.mix?.main === 'a' ? 'a' : 'b';
     favorites = Array.isArray(s.favorites) ? s.favorites.filter(f => ((Number.isSafeInteger(f.id) && f.id > 0) || (typeof f.id==='string' && /^https?:\/\//.test(f.id))) && typeof f.name === 'string').slice(0, 100) : [];
     activeSource = s.activeSource === 'b' ? 'b' : 'a';
@@ -221,6 +224,7 @@ async function connect() {
   } finally { if (connecting === request) { connecting = null; connectionUI(); } }
 }
 function showMessage(message, historyOnly = false) {
+  if (message.isSelf === undefined) message = {...message, isSelf: window.chatSender?.isOwn(message) === true};
   if(window.chatBlocking?.isBlocked(message)||window.chatRules?.blocked(message))return;
   if(!historyOnly||message.type==='superchat')window.localRecording?.message(message);
   if(window.chatRules?.merge(message))return;
@@ -234,7 +238,7 @@ function showMessage(message, historyOnly = false) {
   $('chatEmpty')?.remove(); list.append(row); while (list.children.length > 180) list.firstChild.remove();
   if (nearBottom) list.scrollTop = list.scrollHeight;
   if (historyOnly || !$('showChat').checked) return;
-  const bullet = document.createElement('span'); bullet.className = 'bullet'; ChatContent.append(bullet, message);
+  const bullet = document.createElement('span'); bullet.className = message.isSelf ? 'bullet is-self' : 'bullet'; ChatContent.append(bullet, message);
   bullet.dataset.source = message.source || 'a';
   window.chatBlocking?.tag(bullet,message);
   if(window.danmakuLayout?.add(bullet))window.danmakuActions?.attach(bullet,message);
@@ -245,6 +249,7 @@ window.live.onChat(message => {
   if(message.type==='superchat-delete'){window.replay?.remove(source,message.ids);window.superChats?.remove(source,message.ids);return;}
   if (!mix['chat' + source.toUpperCase()]) return;
   if (message.type === 'status') { chatStates[source] = message.text; renderChatStatus(); return; }
+  message = {...message, isSelf: window.chatSender?.isOwn(message) === true};
   const edge = channels[source]?.edge(performance.now());
   if (edge !== null && edge !== undefined) { window.replay?.remember({...message,source},edge); (source === 'a' ? queue : queueB).push(message, edge); }
 });

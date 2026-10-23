@@ -2,7 +2,7 @@
   let words=[],mergeEnabled=false;const recent=new Map();
   try{const s=JSON.parse(localStorage.getItem('freecast-chat-rules')||'{}');words=Array.isArray(s.words)?s.words.filter(x=>typeof x==='string').slice(0,100):[];mergeEnabled=s.merge===true;}catch{}
   const normalize=s=>String(s||'').normalize('NFKC').toLocaleLowerCase();
-  const key=m=>(m.source||'a')+'|'+normalize(m.text)+'|'+(m.emoticon?.url||'')+'|'+(m.emotes||[]).map(e=>e.token+e.url).join('|');
+  const key=m=>(m.source||'a')+'|'+(m.isSelf?'self':'other')+'|'+normalize(m.text)+'|'+(m.emoticon?.url||'')+'|'+(m.emotes||[]).map(e=>e.token+e.url).join('|');
   function blocked(m){const text=normalize(m.text);return words.some(word=>text.includes(normalize(word)));}
   function reset(){recent.clear();}
   function merge(m){

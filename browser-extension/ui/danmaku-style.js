@@ -1,6 +1,7 @@
 // Appearance changes affect the video overlay only; receiving/sending stays unchanged.
 (()=>{
   const button=$('danmakuSettingsButton'),panel=$('danmakuSettings'),overlay=$('danmaku');
+  for(const [color,label] of Object.entries(selfDanmakuColors)){const option=document.createElement('option');option.value=color;option.textContent=label;$('selfDanmakuColor').append(option);}
   function layout(){
     window.danmakuLayout?.layout();
     const controls=document.querySelector('.player-bottom'),bottom=controls.parentElement===$('player')?Math.ceil(controls.getBoundingClientRect().height+12):12;
@@ -10,6 +11,10 @@
   function apply(){
     overlay.style.opacity=String(1-mix.danmakuTransparency/100);
     overlay.style.setProperty('--danmaku-font-size',mix.danmakuSize+'px');
+    mix.selfDanmakuColor=normalizeSelfDanmakuColor(mix.selfDanmakuColor);
+    overlay.style.setProperty('--self-danmaku-color',mix.selfDanmakuColor);
+    panel.style.setProperty('--self-danmaku-color',mix.selfDanmakuColor);
+    $('selfDanmakuColor').value=mix.selfDanmakuColor;
     $('superChatOverlay').style.opacity='1';
     $('danmakuDensity').value=mix.danmakuDensity;$('danmakuDensityValue').value=mix.danmakuDensity+'%';$('danmakuArea').value=String(mix.danmakuArea);
     $('showSC').checked=mix.showSC;$('scMaxDuration').value=String(mix.scMaxDuration);
@@ -26,7 +31,8 @@
   $('danmakuSpeed').addEventListener('input',event=>{const value=Number(event.target.value);if(!Number.isFinite(value))return;mix.danmakuSpeed=clamp(Math.round(value*10)/10,.5,2);apply();save();});
   $('danmakuDensity').addEventListener('input',event=>{const n=Number(event.target.value);if(!Number.isFinite(n))return;mix.danmakuDensity=clamp(Math.round(n),20,100);apply();save();});
   $('danmakuArea').addEventListener('change',()=>{mix.danmakuArea=Number($('danmakuArea').value);apply();save();});
-  $('resetDanmakuStyle').addEventListener('click',()=>{for(const key of ['danmakuTransparency','danmakuSize','danmakuSpeed','scMaxDuration','danmakuDensity','danmakuArea'])mix[key]=defaultMix[key];apply();window.superChats?.tick();save();});
+  $('selfDanmakuColor').addEventListener('change',()=>{mix.selfDanmakuColor=normalizeSelfDanmakuColor($('selfDanmakuColor').value);apply();save();});
+  $('resetDanmakuStyle').addEventListener('click',()=>{for(const key of ['danmakuTransparency','danmakuSize','danmakuSpeed','scMaxDuration','danmakuDensity','danmakuArea','selfDanmakuColor'])mix[key]=defaultMix[key];apply();window.superChats?.tick();save();});
   $('scMaxDuration').addEventListener('change',()=>{mix.scMaxDuration=Number($('scMaxDuration').value);window.superChats?.tick();save();});
   $('showSC').addEventListener('change',()=>{mix.showSC=$('showSC').checked;window.superChats?.tick();save();});
   document.addEventListener('pointerdown',event=>{if(!panel.hidden&&!panel.contains(event.target)&&!button.contains(event.target))open(false);});

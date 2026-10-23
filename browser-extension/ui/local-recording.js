@@ -47,7 +47,7 @@
     await wakeLock?.release().catch(()=>{});wakeLock=null;videoPending=false;audioPending=0;window.recordRenderer.clear();canvas=null;
   }
   async function stop(){if(stopping)return stopping;revision++;active=false;clock?.terminate();clock=null;stopping=(async()=>{if(startTask)await startTask;await cleanup();})();try{await stopping;}finally{stopping=null;render();}}
-  function message(m){if(!active)return;log({type:m.type||'danmaku',t:Math.round((vocal.ctx.currentTime-origin)*1000),source:m.source||'a',user:m.user,uid:m.uid,text:m.text,emoticon:m.emoticon,emotes:m.emotes,price:m.price,duration:m.duration,at:m.at});}
+  function message(m){if(!active)return;log({type:m.type||'danmaku',t:Math.round((vocal.ctx.currentTime-origin)*1000),source:m.source||'a',user:m.user,uid:m.uid,isSelf:m.isSelf===true,text:m.text,emoticon:m.emoticon,emotes:m.emotes,price:m.price,duration:m.duration,at:m.at});}
   $('recordButton').onclick=()=>{render();$('recordDialog').showModal();};$('chooseRecordFolder').onclick=choose;$('startRecording').onclick=()=>start();$('stopRecording').onclick=()=>stop();
   for(const id of ['autoRecord','recordMini','recordQuality'])$(id).onchange=()=>{auto=$('autoRecord').checked;includeMini=$('recordMini').checked;quality=$('recordQuality').value;qualityHint();localStorage.setItem(optionsKey,JSON.stringify({auto,mini:includeMini,quality}));};
   addEventListener('beforeunload',e=>{if(active||starting||stopping){e.preventDefault();e.returnValue='';}});addEventListener('pagehide',()=>{void stop();});

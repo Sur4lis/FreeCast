@@ -56,7 +56,7 @@ async function submitChat(emote=null,expectedRoom=null,quick=null){
   finally{releaseEcho();sending=false;$('sendTarget').disabled=false;renderSendTargets();}
 }
 $('sendChatForm').addEventListener('submit',event=>{event.preventDefault();if(!event.isComposing)submitChat();});
-window.chatSender={sendEmote:(emote,room)=>submitChat(emote,room),repeat:(message,room)=>submitChat(null,null,{source:message.source==='b'?'b':'a',text:message.text,room}),reply(message,room){
+window.chatSender={isOwn:message=>(message.platform||'bilibili')==='bilibili'&&account.loggedIn===true&&Number.isSafeInteger(account.uid)&&account.uid>0&&String(message.uid)===String(account.uid),sendEmote:(emote,room)=>submitChat(emote,room),repeat:(message,room)=>submitChat(null,null,{source:message.source==='b'?'b':'a',text:message.text,room}),reply(message,room){
   const key=message.source==='b'?'b':'a';
   if(sending)return sendFeedback('正在发送，请稍候');
   if(!room||channels[key]?.room!==room)return sendFeedback('直播源已切换，请选择当前直播间的弹幕');
