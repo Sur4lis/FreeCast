@@ -14,10 +14,11 @@ const vocal = window.vocal = {
     for(const key of ['a','b']){const p=this.pipes[key],upper=key.toUpperCase();
       $('aiMode'+upper).value=p.mode;$('aiStrength'+upper).value=p.strength;$('aiStrategy'+upper).value=p.strategy;
       $('aiStrategy'+upper).disabled=p.mode!=='instrumental';$('aiStrength'+upper).disabled=p.mode==='off';
-      $('aiState'+upper).textContent=p.error?'失败，已静音：'+p.error:p.loading?'加载中…':p.active?(p.ready?'处理中':'准备音频')+(p.lastMs?' · '+Math.round(p.lastMs)+' ms':''):p.mode==='off'?'原声':this.armed?'连接后开启':'待开启';
+      $('aiState'+upper).textContent=p.error?'AI 已停止，已切回原声（含原解说）：'+p.error:p.loading?'加载中…':p.active?(p.ready?'处理中':'准备音频')+(p.lastMs?' · '+Math.round(p.lastMs)+' ms':''):p.mode==='off'?'原声':this.armed?'连接后开启':'待开启';
     }
     $('filterEnable').checked=this.armed;$('filterEnable').disabled=false;
-    $('filterStatus').textContent=this.loading?'正在准备本地 AI…':this.label()+(this.active?' · 音画补偿 '+this.delay+' 秒':this.armed?' · 连接后自动开启':' · 已关闭');
+    const failed=Object.entries(this.pipes).filter(([,p])=>p.error).map(([key])=>key.toUpperCase()).join('、');
+    $('filterStatus').textContent=(this.loading?'正在准备本地 AI…':this.active?this.label()+' · 音画补偿 '+this.delay+' 秒':failed?'':this.label()+(this.armed?' · 连接后自动开启':' · 已关闭'))+(failed?(this.active||this.loading?' · ':'')+failed+' 路已切回原声':'');
   },
   async graph(){
     if(this.graphReady)return;if(this.graphPending)return this.graphPending;
@@ -66,7 +67,7 @@ const vocal = window.vocal = {
   bufferPadding(){return Math.max(0,...Object.values(this.pipes).filter(p=>p.active).map(p=>p.bufferPadding()));},
   reset(){for(const p of Object.values(this.pipes))p.reset();},pause(){for(const p of Object.values(this.pipes))p.pause();},tick(){for(const p of Object.values(this.pipes))p.tick();},
   attachFLV(engine,key){this.pipes[key].attachFLV(engine,key);},attachHLS(engine,key){this.pipes[key].attachHLS(engine,key);},detachMirror(key){this.pipes[key].detachMirror(key);},
-  clearReplay(){for(const p of Object.values(this.pipes))p.clearReplay?.();},seekReplay(){for(const p of Object.values(this.pipes))p.seekReplay?.();},endReplay(){for(const p of Object.values(this.pipes))p.endReplay?.();},replayTick(rate,hold){for(const p of Object.values(this.pipes))p.replayTick?.(rate,hold);}
+  clearReplay(){for(const p of Object.values(this.pipes))p.clearReplay?.();},pruneReplay(){for(const p of Object.values(this.pipes))p.pruneReplay?.();},seekReplay(){for(const p of Object.values(this.pipes))p.seekReplay?.();},endReplay(){for(const p of Object.values(this.pipes))p.endReplay?.();},replayTick(rate,hold){for(const p of Object.values(this.pipes))p.replayTick?.(rate,hold);}
 };
 for(const key of ['a','b']){
   const p=vocal.pipes[key]=Object.assign(Object.create(vocalTemplate),{sourceKey:key,mode:key==='b'?'instrumental':'off',strength:100,strategy:'game',nodes:new Set(),timeline:[],anchors:[],raw:[[],[]],resets:[],feeds:vocal.feeds,mirrors:vocal.mirrors,transports:vocal.transports});p.ensureFeed(key);

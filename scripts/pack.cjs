@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '..');
 const source = path.join(root, 'browser-extension');
 const manifest = JSON.parse(fs.readFileSync(path.join(source, 'manifest.json'), 'utf8').replace(/^\uFEFF/, ''));
 const version = manifest.version_name;
-if (version !== '1.20' || manifest.version !== version) throw Error('Unexpected release version');
+if (!/^\d+\.\d+(?:\.\d+)?$/.test(version) || manifest.version !== version) throw Error('Unexpected release version');
 const digest = data => crypto.createHash('sha256').update(data).digest('hex');
 const ordered = values => values.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
 function files(directory) {
@@ -18,7 +18,7 @@ function files(directory) {
 }
 function add(zip, name, bytes) {
   zip.addFile(name, bytes);
-  zip.getEntry(name).header.time = new Date(2026, 9, 23, 0, 0, 0);
+  zip.getEntry(name).header.time = new Date(2026, 9, 24, 0, 0, 0);
   zip.getEntry(name).header.made = 0x0314;
 }
 function write(zip, name) {

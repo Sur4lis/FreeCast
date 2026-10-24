@@ -71,7 +71,7 @@ test('receive-time ownership survives playback delay, replay and account changes
   assert.deepEqual(f.remembered.map(x=>x.m.isSelf),[true,true,false]);
   f.run('account={loggedIn:true,uid:456};globalThis.pending=[...queue.take(100),...queueB.take(100)];');
   // Use the real rendering entry point, with a layout sink in place of animation.
-  f.context.danmakuLayout={layout(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
+  f.context.danmakuLayout={layout(){},speed(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
   for(const m of f.context.pending)f.context.showMessage(m);
   assert.deepEqual(f.element('danmaku').children.map(e=>e.className),['bullet is-self','bullet is-self','bullet']);
   const before=f.element('danmaku').children.length;f.context.showMessage(f.remembered[0].m,true);
@@ -81,7 +81,7 @@ test('receive-time ownership survives playback delay, replay and account changes
 
 test('spam merging keeps own messages separate from identical comments by other users',()=>{
   const f=fixture({'freecast-chat-rules':JSON.stringify({merge:true})});
-  f.context.danmakuLayout={layout(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
+  f.context.danmakuLayout={layout(){},speed(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
   const other={type:'message',source:'a',uid:'456',text:'+1'},self={...other,uid:'123'};
   f.context.showMessage(other);f.context.showMessage(self);f.context.showMessage(other);f.context.showMessage(self);
   assert.equal(f.element('chatList').children.length,2);
@@ -109,7 +109,7 @@ test('legacy and invalid saved colors fall back safely; supported uppercase colo
 });
 
 test('recorded overlay draws only own borders and invalidates its texture when the color changes',()=>{
-  const f=fixture();f.context.danmakuLayout={layout(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
+  const f=fixture();f.context.danmakuLayout={layout(){},speed(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
   f.context.showMessage({uid:'123',text:'自己的弹幕'});f.context.showMessage({uid:'456',text:'其他弹幕'});
   f.context.getComputedStyle=el=>({backgroundColor:'transparent',borderRadius:'2px',borderTopWidth:el.classList.contains('is-self')?'1px':'0px',borderTopColor:f.element('danmaku').style['--self-danmaku-color']});
   f.load('record-renderer.js');
@@ -119,4 +119,28 @@ test('recorded overlay draws only own borders and invalidates its texture when t
   f.context.recordRenderer.draw(canvas,false);assert.equal(f.canvases.length,2);
   f.element('selfDanmakuColor').value='#66d9ef';f.element('selfDanmakuColor').dispatch('change');
   f.context.recordRenderer.draw(canvas,false);assert.deepEqual(f.canvases.slice(2).map(c=>c.ops),[['#66d9ef'],[]]);
+});
+
+test('v1.21 merging preserves source boundaries, stable emote IDs and borders when a merged bullet reappears',()=>{
+  const f=fixture({'freecast-chat-rules':JSON.stringify({merge:true})});
+  f.context.danmakuLayout={layout(){},speed(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
+  const own={source:'a',uid:'123',text:' 大笑 ',receivedAt:1000,emoticon:{unique:'laugh',url:'https://img/laugh?old'}};
+  for(const m of [own,{...own,source:'b'},{...own,uid:'456'}])f.context.showMessage(m);
+  f.element('danmaku').children[0].remove();
+  f.context.showMessage({...own,text:'大笑',receivedAt:7000,emoticon:{unique:'laugh',url:'https://img/laugh?new'}});
+  assert.equal(f.element('chatList').children.length,3);
+  assert.equal(f.element('chatList').children[0].querySelector('.repeat-count').textContent,'×2');
+  const returned=f.element('danmaku').children.at(-1);
+  assert.equal(returned.className,'bullet is-self');assert.equal(returned.dataset.source,'a');
+  assert.equal(returned.querySelector('.repeat-count').textContent,'×2');
+  assert.equal(f.element('chatList').children[1].querySelector('.repeat-count'),null);
+  assert.equal(f.element('chatList').children[2].querySelector('.repeat-count'),null);
+});
+
+test('adding ownership detection does not re-enable +1 sending in v1.21',async()=>{
+  const f=fixture();let sent=0;f.context.live.sendChat=async()=>{sent++;return{sent:true};};
+  f.run("running=true;channels={a:{room:{id:1,name:'test'}}};");
+  f.element('chatText').value='保留草稿';
+  assert.equal(await f.context.chatSender.repeat({source:'a',uid:'123',text:'+1'},f.run('channels.a.room')),'+1 暂停使用');
+  assert.equal(sent,0);assert.equal(f.element('chatText').value,'保留草稿');
 });

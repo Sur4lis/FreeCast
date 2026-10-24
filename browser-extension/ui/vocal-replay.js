@@ -1,15 +1,22 @@
 // Retain already-filtered audio. Replay does not run inference at the selected speed.
 for(const vocal of Object.values(window.vocal.pipes)){
   let blocks=[],serial=0,origin=null;const nodes=new Set(),scheduled=new Set();
-  function stopNodes(){for(const n of nodes)try{n.stop();}catch{}nodes.clear();scheduled.clear();origin=null;}
+  function stopNodes(){for(const n of nodes){try{n.stop();}catch{}n.onended?.();}nodes.clear();scheduled.clear();origin=null;}
+  const bytes=()=>blocks.reduce((n,b)=>n+b.buffer.length*b.buffer.numberOfChannels*4,0);
   Object.assign(vocal,{
     rememberReplay(buffer,start){
       const seconds=window.replay?.seconds();if(!seconds)return;
       // A feed seek can reprocess the same timestamps. Keep one generation of audio there.
       if(blocks.length&&start<blocks.at(-1).end-this.overlap/this.rate-.1){blocks=blocks.filter(b=>b.end<=start);stopNodes();}
       blocks.push({buffer,start,end:start+buffer.duration,id:++serial});
-      blocks=blocks.filter(b=>b.end>start-seconds-15).slice(-70);
+      this.pruneReplay();
     },
+    pruneReplay(){
+      const seconds=window.replay?.seconds()||0;if(!seconds){this.clearReplay();return;}
+      const last=blocks.at(-1);if(last)blocks=blocks.filter(b=>b.end>last.start-seconds-15).slice(-70);
+      let size=bytes();while(blocks.length&&size>128*1024*1024){const b=blocks.shift();size-=b.buffer.length*b.buffer.numberOfChannels*4;}
+    },
+    replayBytes(){return bytes();},
     replayRanges(){
       const result=[];for(const b of blocks){const last=result.at(-1);if(last&&b.start<=last[1]+.05)last[1]=Math.max(last[1],b.end);else result.push([b.start,b.end]);}return result;
     },
@@ -34,7 +41,7 @@ for(const vocal of Object.values(window.vocal.pipes)){
         if(start<when+fade/rate)gain.gain.linearRampToValueAtTime(1,when+fade/rate);
         if(start<end-fade/rate)gain.gain.setValueAtTime(1,end-fade/rate);
         gain.gain.linearRampToValueAtTime(0,end);
-        nodes.add(node);scheduled.add(b.id);node.onended=()=>{nodes.delete(node);node.disconnect();gain.disconnect();};node.start(start,offset);
+        nodes.add(node);scheduled.add(b.id);node.onended=()=>{nodes.delete(node);node.disconnect();gain.disconnect();node.buffer=null;node.onended=null;};node.start(start,offset);
       }
     }
   });

@@ -6,7 +6,7 @@
   const clock=value=>`${Math.floor(Math.max(0,value)/60)}:${String(Math.floor(Math.max(0,value)%60)).padStart(2,'0')}`;
   const replay=window.replay={active:false,rate:1,seconds:()=>seconds,history,
     bufferSeconds:()=>seconds?seconds+90:150,
-    setSeconds(n){if(![0,60,180,300].includes(n))return;if(this.active)this.live();const was=seconds;seconds=n;if(!was)startedAt=performance.now();localStorage.setItem('freecast-replay-seconds',String(n));for(const c of Object.values(channels))this.configure(c);if(!n){for(const h of Object.values(history))h.clear();window.vocal?.clearReplay();}this.render(true);},
+    setSeconds(n){if(![0,60,180,300].includes(n))return;if(this.active)this.live();const was=seconds;seconds=n;if(!was)startedAt=performance.now();localStorage.setItem('freecast-replay-seconds',String(n));for(const c of Object.values(channels)){this.configure(c);window.mediaBuffers?.trim(c,true);}if(!n){for(const h of Object.values(history))h.clear();window.vocal?.clearReplay();}else if(n<was){window.vocal?.pruneReplay?.();}this.render(true);},
     targets(now=performance.now()){
       const d=getDelays();return Object.fromEntries(keys.map(k=>[k,channels[k]?.edge?.(now)==null?null:channels[k].edge(now)-d[k]+pauseLag]));
     },
@@ -24,6 +24,7 @@
     clearSource(key,resetPlayback=true){history[key].clear();if(resetPlayback&&this.active)this.live();},
     reset(){this.active=false;this.rate=1;anchor={};cursors={};startedAt=performance.now();for(const h of Object.values(history))h.clear();window.vocal?.clearReplay();this.render(true);},
     configure(channel){
+      if(window.mediaBuffers){window.mediaBuffers.configure(channel);return;}
       const retain=this.bufferSeconds();
       if(channel.engine instanceof Hls){Object.assign(channel.engine.config,{backBufferLength:retain,maxBufferLength:retain,maxMaxBufferLength:retain,maxBufferSize:Math.max(160,retain*2)*1000000});}
       else {const config=channel.engine?._player_engine?._mse_controller?._config;if(config){config.autoCleanupMaxBackwardDuration=retain;config.autoCleanupMinBackwardDuration=retain-10;}}

@@ -1,10 +1,15 @@
 (()=>{
   const chats=new Map(),listeners=new Set();
-  const rpc=async(op,fields={})=>{const r=await chrome.runtime.sendMessage({op,...fields});if(!r?.ok)throw new Error(r?.error||'插件连接已失效，请刷新页面');return r.value;};
+  const rpc=async(op,fields={})=>{const r=await chrome.runtime.sendMessage({op,...fields});if(!r?.ok){const error=new Error(r?.error||'插件连接已失效，请刷新页面');error.code=r?.errorCode;throw error;}return r.value;};
   window.live={
     ensureSources:async inputs=>{
-      const other=inputs.some(value=>{if(/^\d+$/.test(String(value).trim()))return false;try{return new URL(value).hostname!=='live.bilibili.com';}catch{return false;}});
-      if(other&&!await chrome.permissions.request({origins:['https://*/*','http://*/*']}))throw Error('其他平台需要网站访问权限；取消后仍可使用 B 站');
+      const platforms=inputs.map(value=>{if(/^\d+$/.test(String(value).trim()))return 'bilibili';try{const url=new URL(value);return /^https?:$/.test(url.protocol)?url.hostname==='live.bilibili.com'?'bilibili':'other':'';}catch{return '';}});
+      if(!platforms.some(Boolean))return;
+      const other=platforms.includes('other'),origins=other?['https://*/*','http://*/*']:[...new Set(['https://*.bilibili.com/*',...(chrome.runtime.getManifest().host_permissions||[])])];
+      const access={origins},hint=other?'直播平台网站访问未授权，请点击连接直播或重连弹幕并允许访问。':'B 站网站访问未授权，请点击连接直播或重连弹幕并允许访问 bilibili.com。';
+      // Ask while the click is active; automatic reconnects only check existing access.
+      if(navigator.userActivation?.isActive){if(!await chrome.permissions.request(access))throw Error(hint);}
+      else if(!await chrome.permissions.contains(access))throw Error(hint);
     },
     resolveRoom:(room,quality,options={})=>rpc('resolve',{room,quality,preview:options.preview===true,line:options.line}),
     prepareSources:rooms=>rpc('prepareSources',{rooms}),

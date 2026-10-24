@@ -6,7 +6,7 @@ async function refreshAccount(){
   }catch(error){account={loggedIn:false};$('loginButton').textContent='登录状态待验证';$('loginButton').title=error.message;}
   finally{checkingAccount=false;renderSendTargets();if(revision!==accountRevision){clearTimeout(authTimer);authTimer=setTimeout(refreshAccount,100);}}
 }
-$('loginButton').addEventListener('click',refreshAccount);
+$('loginButton').addEventListener('click',async()=>{try{await window.live.ensureSources(['https://live.bilibili.com/']);await refreshAccount();}catch(error){notice(error.message,true);}});
 $('browserLoginButton').addEventListener('click',()=>window.live.authBrowser().catch(error=>notice(error.message,true)));
 let authTimer;
 chrome.runtime.onMessage.addListener(message=>{if(message.type==='accountChanged'){accountRevision++;account={loggedIn:false};renderSendTargets();$('loginButton').textContent='正在更新登录状态…';clearTimeout(authTimer);authTimer=setTimeout(refreshAccount,600);}});
@@ -56,7 +56,7 @@ async function submitChat(emote=null,expectedRoom=null,quick=null){
   finally{releaseEcho();sending=false;$('sendTarget').disabled=false;renderSendTargets();}
 }
 $('sendChatForm').addEventListener('submit',event=>{event.preventDefault();if(!event.isComposing)submitChat();});
-window.chatSender={isOwn:message=>(message.platform||'bilibili')==='bilibili'&&account.loggedIn===true&&Number.isSafeInteger(account.uid)&&account.uid>0&&String(message.uid)===String(account.uid),sendEmote:(emote,room)=>submitChat(emote,room),repeat:(message,room)=>submitChat(null,null,{source:message.source==='b'?'b':'a',text:message.text,room}),reply(message,room){
+window.chatSender={isOwn:message=>(message.platform||'bilibili')==='bilibili'&&account.loggedIn===true&&Number.isSafeInteger(account.uid)&&account.uid>0&&String(message.uid)===String(account.uid),sendEmote:(emote,room)=>submitChat(emote,room),repeat:async()=>'+1 暂停使用',reply(message,room){
   const key=message.source==='b'?'b':'a';
   if(sending)return sendFeedback('正在发送，请稍候');
   if(!room||channels[key]?.room!==room)return sendFeedback('直播源已切换，请选择当前直播间的弹幕');

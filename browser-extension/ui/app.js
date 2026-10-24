@@ -75,7 +75,7 @@ class Channel {
     this.media = media; this.room = room; this.name = name; this.token = token; this.index = 0; this.latest = null; this.edgeAt = 0; this.closed = false; this.error = ''; this.lastProgress = performance.now();
     this.load();
   }
-  destroyEngine() { window.vocal?.detachMirror(this.media.id === 'videoB' ? 'b' : 'a'); if (this.engine) { this.engine.destroy(); this.engine = null; } this.media.pause(); this.media.removeAttribute('src'); this.media.load(); }
+  destroyEngine() { clearTimeout(this.bufferRecovery);this.bufferRecovery=null;window.vocal?.detachMirror(this.media.id === 'videoB' ? 'b' : 'a'); if (this.engine) { this.engine.destroy(); this.engine = null; } this.media.pause(); this.media.removeAttribute('src'); this.media.load(); }
   load() {
     this.loadRevision=(this.loadRevision||0)+1;
     window.replay?.clearSource(this.name === 'A 音频' ? 'a' : 'b');
@@ -97,6 +97,7 @@ class Channel {
         });
         this.engine.on(mpegts.Events.ERROR, () => this.fallback());
         this.engine.attachMediaElement(this.media);
+        window.mediaBuffers?.attach(this);
         window.replay?.configure(this);
         window.vocal?.attachFLV(this.engine, this.media.id === 'videoB' ? 'b' : 'a');
         this.engine.load();
@@ -129,6 +130,7 @@ class Channel {
     }, 500);
   }
   sample(now) {
+    window.mediaBuffers?.trim(this);
     const ranges = [];
     for (let i = 0; i < this.media.buffered.length; i++) ranges.push([this.media.buffered.start(i), this.media.buffered.end(i)]);
     if (ranges.length) {
@@ -159,7 +161,7 @@ function cancelConnection(showNotice = true) {
   if (showNotice) notice(running ? '已取消换源，继续播放当前直播。' : '已取消连接。');
 }
 async function stop({preserveConnection = null} = {}) {
-  await window.localRecording?.stop();
+  const closingRecording = window.localRecording?.stop();
   if (connecting !== preserveConnection) cancelConnection(false);
   window.vocal?.disable();
   window.replay?.reset();
@@ -177,7 +179,7 @@ async function stop({preserveConnection = null} = {}) {
   updateOffset();
   applyMix();
   connectionUI();
-  await Promise.allSettled([closingChats, closingAudio?.close()]);
+  await Promise.allSettled([closingRecording, closingChats, closingAudio?.close()]);
 }
 async function connect() {
   cancelConnection(false);
@@ -227,20 +229,25 @@ function showMessage(message, historyOnly = false) {
   if (message.isSelf === undefined) message = {...message, isSelf: window.chatSender?.isOwn(message) === true};
   if(window.chatBlocking?.isBlocked(message)||window.chatRules?.blocked(message))return;
   if(!historyOnly||message.type==='superchat')window.localRecording?.message(message);
-  if(window.chatRules?.merge(message))return;
+  const merged=window.chatRules?.merge(message);
+  if(merged){if(!historyOnly&&!merged.bullet?.isConnected)showDanmaku(message,merged);return;}
   if(message.type==='superchat'){window.superChats?.add(message);return;}
   const row = document.createElement('div'); row.className = 'chat-row';
   const username = document.createElement('span'); username.className = 'username'; username.textContent = (message.source ? '[' + message.source.toUpperCase() + '] ' : '') + message.user;
   row.dataset.source = message.source || 'a';
   window.chatBlocking?.decorate(row,username,message);
-  row.append(username); ChatContent.append(row, message);window.chatRules?.track(message,row);
+  row.append(username); ChatContent.append(row, message);const group=window.chatRules?.track(message,row);
   const list = $('chatList'), nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 70;
   $('chatEmpty')?.remove(); list.append(row); while (list.children.length > 180) list.firstChild.remove();
   if (nearBottom) list.scrollTop = list.scrollHeight;
-  if (historyOnly || !$('showChat').checked) return;
+  if(!historyOnly)showDanmaku(message,group);
+}
+function showDanmaku(message,group){
+  if(!$('showChat').checked)return;
   const bullet = document.createElement('span'); bullet.className = message.isSelf ? 'bullet is-self' : 'bullet'; ChatContent.append(bullet, message);
   bullet.dataset.source = message.source || 'a';
   window.chatBlocking?.tag(bullet,message);
+  window.chatRules?.attachBullet(group,bullet,message);
   if(window.danmakuLayout?.add(bullet))window.danmakuActions?.attach(bullet,message);
 }
 window.live.onChat(message => {

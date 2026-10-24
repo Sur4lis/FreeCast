@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "二路自由 FreeCast · 直播组合播放器",
-  "version": "1.20",
+  "version": "1.21",
   "minimum_chrome_version": "120",
   "description": "多平台直播组合、A/B 本地 AI 去人声或只保留人声、回看、线路切换、时间对齐、小窗裁剪、SC 和跨平台弹幕发送。",
   "permissions": [
@@ -36,7 +36,7 @@
     "extension_pages": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: http: wss://*.chat.bilibili.com:* wss://cdnws.api.huya.com wss://danmuproxy.douyu.com:* wss://webcast100-ws-web-lq.douyin.com wss://webcast3-ws-web-lq.douyin.com wss://webcast5-ws-web-lf.douyin.com; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'none'"
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9dxSmBRQhrTU6nbtRBNZwUEfBukvYNEZAj1g5yUpcMxIZYdjKr2lYdUBXkdlu91GSs6XBkUBts20/Jv285Tuc2gikKzD+G3jktf48r1Wv9OCUdMO9086Xwc7CZtPs6VSEQNdL+97oimNUHBBnxpPNN4W6BBBjuE3cfkVQBpLCEG1AScseNLuLZXyrIKaSyJ/uqFVjspdJIvyPi7Z3euIsey/AxjvccN3BfasUc6Bn0N6eqHpcz8Kh7gDzm99gUE7El7UYQ9SCC4fLqs5a7Y9aJ9kK3zsUHAjkwteynHPPwS75Cayzznskp7Ep582JW/WBgQec9CebTgmMDcJshgAMQIDAQAB",
-  "version_name": "1.20",
+  "version_name": "1.21",
   "optional_host_permissions": [
     "https://*/*",
     "http://*/*"

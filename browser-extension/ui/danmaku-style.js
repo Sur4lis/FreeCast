@@ -21,7 +21,7 @@
     $('danmakuTransparency').value=mix.danmakuTransparency;$('danmakuTransparencyValue').value=mix.danmakuTransparency+'%';
     $('danmakuSize').value=mix.danmakuSize;$('danmakuSizeValue').value=mix.danmakuSize+' px';
     $('danmakuSpeed').value=mix.danmakuSpeed;$('danmakuSpeedValue').value=mix.danmakuSpeed.toFixed(1)+'×';
-    for(const bullet of overlay.children)for(const animation of bullet.getAnimations())animation.updatePlaybackRate(mix.danmakuSpeed);
+    for(const bullet of overlay.children)window.danmakuLayout?.speed(bullet);
     layout();
   }
   function open(enabled,restoreFocus=false){panel.hidden=!enabled;button.setAttribute('aria-expanded',String(enabled));if(enabled){layout();$('closeDanmakuSettings').focus();}else if(restoreFocus)button.focus();}

@@ -248,6 +248,7 @@ body.blg-ambience-paused #blg-ambience * { animation-play-state: paused; }
 }
 @media (prefers-reduced-motion: reduce) {
   #blg-ambience { display: none; }
-  :root[data-theme="bluepink"] *, :root[data-theme="bluepink"] *::before, :root[data-theme="bluepink"] *::after { animation: none !important; transition: none !important; }
+  :root[data-theme="bluepink"] :is(.blg-recall, .blg-snowflake, .blg-dm), :root[data-theme="bluepink"] .blg-recall::before { animation: none !important; }
+  :root[data-theme="bluepink"] *, :root[data-theme="bluepink"] *::before, :root[data-theme="bluepink"] *::after { transition: none !important; }
 }
 

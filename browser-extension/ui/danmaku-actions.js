@@ -3,7 +3,8 @@
   const overlay=$('danmaku'),player=$('player'),menu=document.createElement('div');
   menu.id='danmakuActions';menu.className='chat-action-menu';menu.hidden=true;menu.setAttribute('role','group');menu.setAttribute('aria-label','弹幕操作');
   const make=(id,text)=>{const b=document.createElement('button');b.type='button';b.id=id;b.textContent=text;menu.append(b);return b;};
-  const copy=make('copyDanmaku','复制'),reply=make('replyDanmaku','回复'),repeat=make('repeatDanmaku','+1');
+  const copy=make('copyDanmaku','复制'),reply=make('replyDanmaku','回复'),block=make('blockKeywordDanmaku','屏蔽');
+  block.title='将这条弹幕的文字加入屏蔽关键词';
   const status=document.createElement('span');status.className='chat-action-status';status.setAttribute('role','status');menu.append(status);player.append(menu);
   let selected=null,timer,watch;
   function close(){clearTimeout(timer);cancelAnimationFrame(watch);for(const el of overlay.children)el.classList.remove('danmaku-held','danmaku-selected');selected=null;menu.hidden=true;}
@@ -23,8 +24,7 @@
     for(const other of overlay.children)if(other.dataset.lane===el.dataset.lane)other.classList.add('danmaku-held');
     el.classList.add('danmaku-selected');menu.hidden=false;status.textContent='';
     const connected=Boolean(room&&channels[message.source==='b'?'b':'a']?.room===room);
-    reply.disabled=!connected;repeat.disabled=!connected||Boolean(message.emoticon);copy.disabled=!message.text;
-    repeat.title=message.emoticon?'图片表情请从表情面板选择发送':'向 '+(message.source==='b'?'B':'A')+' 直播间发送一次相同内容';
+    reply.disabled=!connected;copy.disabled=!message.text;block.disabled=!String(message.text||'').trim()||!window.chatRules;
     reply.title='在 '+(message.source==='b'?'B':'A')+' 直播间回复 '+message.user;
     position();window.playerUI?.wake();
   }
@@ -41,7 +41,7 @@
   menu.addEventListener('click',e=>e.stopPropagation());menu.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();});
   copy.onclick=async()=>{const current=selected;if(!current)return;try{await navigator.clipboard.writeText(String(current.message.text));if(selected===current)status.textContent='已复制';}catch{if(selected===current)status.textContent='复制失败，请重试';}};
   reply.onclick=()=>{const current=selected;if(!current)return;close();window.chatSender.reply(current.message,current.room);};
-  repeat.onclick=async()=>{const current=selected;if(!current||repeat.disabled)return;repeat.disabled=true;status.textContent='正在发送…';const result=await window.chatSender.repeat(current.message,current.room);if(selected===current){status.textContent=result;repeat.disabled=false;}};
+  block.onclick=()=>{const current=selected;if(!current||block.disabled)return;try{window.chatRules.addKeyword(current.message.text);close();notice('已加入屏蔽关键词，可在弹幕设置中取消');}catch(error){if(selected===current)status.textContent=error.message;}};
   document.addEventListener('pointerdown',e=>{if(selected&&!menu.contains(e.target)&&e.target!==selected.el&&!selected.el.contains(e.target))close();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected){e.preventDefault();e.stopImmediatePropagation();selected.el.blur();close();}},true);
   window.addEventListener('blur',close);document.addEventListener('visibilitychange',()=>{if(document.hidden)close();});

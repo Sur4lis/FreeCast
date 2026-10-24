@@ -4,13 +4,17 @@
 
 ## 下载与安装
 
-[下载 v1.20 安装包](https://github.com/Sur4lis/FreeCast/releases/download/v1.20/FreeCast_v1.20.zip) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.20)
+[下载 v1.21 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.21/FreeCast_v1.21.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.21/FreeCast_Android_v1.21.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.21)
 
 1. 完整解压安装包。
 2. 在 Chrome / Edge 的扩展管理页开启「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的「FreeCast浏览器插件」文件夹。
 
 升级时覆盖原插件目录并刷新扩展，原有收藏和设置保留。请保留插件文件夹。
+
+## v1.21 更新
+
+修复了若干BUG
 
 ## v1.20 更新
 
@@ -34,8 +38,8 @@ npm run pack
 
 随后可直接加载 `browser-extension/`，安装包输出到 `release/`。
 
-模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.20 安装包已包含这些文件，无需额外下载。
+模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.21 安装包已包含这些文件，无需额外下载。
 
 AI 在本地运行，需要硬件 WebGPU 支持。第三方库及模型来源、许可见 [第三方说明](browser-extension/第三方说明.txt)。
 
-[使用说明](browser-extension/使用说明.txt) · [问题反馈](https://github.com/Sur4lis/FreeCast/issues)
+[问题反馈](https://github.com/Sur4lis/FreeCast/issues)
