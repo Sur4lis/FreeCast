@@ -15,6 +15,8 @@ const vocal = window.vocal = {
       $('aiMode'+upper).value=p.mode;$('aiStrength'+upper).value=p.strength;$('aiStrategy'+upper).value=p.strategy;
       $('aiStrategy'+upper).disabled=p.mode!=='instrumental';$('aiStrength'+upper).disabled=p.mode==='off';
       $('aiState'+upper).textContent=p.error?'AI 已停止，已切回原声（含原解说）：'+p.error:p.loading?'加载中…':p.active?(p.ready?'处理中':'准备音频')+(p.lastMs?' · '+Math.round(p.lastMs)+' ms':''):p.mode==='off'?'原声':this.armed?'连接后开启':'待开启';
+      $('aiRetry'+upper).hidden=$('aiRaw'+upper).hidden=!p.error;
+      $('aiRetry'+upper).disabled=!running||paused||Boolean(window.replay?.active)||p.loading;
     }
     $('filterEnable').checked=this.armed;$('filterEnable').disabled=false;
     const failed=Object.entries(this.pipes).filter(([,p])=>p.error).map(([key])=>key.toUpperCase()).join('、');
@@ -71,6 +73,8 @@ const vocal = window.vocal = {
 };
 for(const key of ['a','b']){
   const p=vocal.pipes[key]=Object.assign(Object.create(vocalTemplate),{sourceKey:key,mode:key==='b'?'instrumental':'off',strength:100,strategy:'game',nodes:new Set(),timeline:[],anchors:[],raw:[[],[]],resets:[],feeds:vocal.feeds,mirrors:vocal.mirrors,transports:vocal.transports});p.ensureFeed(key);
+  $('aiRetry'+key.toUpperCase()).addEventListener('click',()=>{if(running&&!paused&&!window.replay?.active){vocal.armed=true;void p.enable();}});
+  $('aiRaw'+key.toUpperCase()).addEventListener('click',async()=>{p.disable();p.mode='off';vocal.releaseIfIdle();try{await vocal.ctx?.resume();}catch(error){notice(error.message,true);}applyMix();updateOffset();vocal.controls();window.configurations?.changed();});
   for(const id of ['aiMode','aiStrength','aiStrategy'])$(id+key.toUpperCase()).addEventListener(id==='aiStrength'?'input':'change',()=>{
     const mode=$('aiMode'+key.toUpperCase()).value,changed=mode!==p.mode||$('aiStrategy'+key.toUpperCase()).value!==p.strategy;
     if(changed){if(window.replay?.active)window.replay.live();p.disable();}p.mode=mode;p.stem=mode==='vocals'?'vocals':'instrumental';p.strength=Number($('aiStrength'+key.toUpperCase()).value);p.strategy=$('aiStrategy'+key.toUpperCase()).value;

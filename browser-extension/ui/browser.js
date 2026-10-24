@@ -1,15 +1,22 @@
-let account={loggedIn:false},checkingAccount=false,accountRevision=0;
+let account={loggedIn:false},checkingAccount=false,accountRevision=0,accountRefreshQueued=false,accountRetry=0,accountError='';
 async function refreshAccount(){
-  if(checkingAccount)return;checkingAccount=true;const revision=accountRevision;
-  try{const result=await window.live.authStatus();if(revision!==accountRevision)return;account=result;
+  if(checkingAccount){accountRefreshQueued=true;return;}checkingAccount=true;accountRefreshQueued=false;const revision=accountRevision;
+  try{const result=await window.live.authStatus();if(revision!==accountRevision)return;account=result;accountError='';
     $('loginButton').textContent=account.loggedIn?'已登录 · '+account.name:'未登录 · 刷新状态';$('loginButton').title='使用当前浏览器的 B 站网页账号；点击刷新';
-  }catch(error){account={loggedIn:false};$('loginButton').textContent='登录状态待验证';$('loginButton').title=error.message;}
-  finally{checkingAccount=false;renderSendTargets();if(revision!==accountRevision){clearTimeout(authTimer);authTimer=setTimeout(refreshAccount,100);}}
+    if(account.loggedIn)accountRetry=0;
+  }catch(error){if(revision===accountRevision){account={loggedIn:false};accountError=error.message;$('loginButton').textContent='验证失败 · 点击重试';$('loginButton').title=error.message;}}
+  finally{
+    checkingAccount=false;renderSendTargets();
+    if(revision!==accountRevision||accountRefreshQueued){clearTimeout(authTimer);authTimer=setTimeout(refreshAccount,100);}
+    else if(accountRetry>0&&!account.loggedIn){clearTimeout(authTimer);authTimer=setTimeout(refreshAccount,(4-accountRetry)*800);accountRetry--;}
+  }
 }
-$('loginButton').addEventListener('click',async()=>{try{await window.live.ensureSources(['https://live.bilibili.com/']);await refreshAccount();}catch(error){notice(error.message,true);}});
+$('loginButton').addEventListener('click',async()=>{try{await window.live.ensureSources(['https://live.bilibili.com/']);await refreshAccount();if(accountError)notice(accountError,true);}catch(error){notice(error.message,true);}});
 $('browserLoginButton').addEventListener('click',()=>window.live.authBrowser().catch(error=>notice(error.message,true)));
 let authTimer;
-chrome.runtime.onMessage.addListener(message=>{if(message.type==='accountChanged'){accountRevision++;account={loggedIn:false};renderSendTargets();$('loginButton').textContent='正在更新登录状态…';clearTimeout(authTimer);authTimer=setTimeout(refreshAccount,600);}});
+function accountChanged(){accountRevision++;account={loggedIn:false};accountError='';accountRetry=window.mobileNative?3:0;renderSendTargets();$('loginButton').textContent='正在更新登录状态…';clearTimeout(authTimer);authTimer=setTimeout(refreshAccount,100);}
+chrome.runtime.onMessage.addListener(message=>{if(message.type==='accountChanged')accountChanged();});
+window.addEventListener('freecast-account-changed',accountChanged);
 window.addEventListener('focus',refreshAccount);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshAccount();});
 let sending=false;
 const connectedNames=new Map(),pendingNames=new Set();
@@ -18,7 +25,8 @@ function renderSendTargets(){
   for(const option of $('sendTarget').options){const key=option.value,room=channels[key]?.room,platform=room?.external?room.platform:'bilibili';
     option.disabled=Boolean(room&&!sendPlatforms[platform]);
     if(room&&!room.name&&!connectedNames.has(room.id)&&!pendingNames.has(room.id)){pendingNames.add(room.id);window.live.getProfile(room.id).then(p=>{connectedNames.set(room.id,p.name);renderChatStatus();}).catch(()=>{}).finally(()=>pendingNames.delete(room.id));}
-    option.textContent=key.toUpperCase()+' · '+(room?(room.name||connectedNames.get(room.id)||room.title||'直播间')+' · '+(sendPlatforms[platform]||'暂不支持发送'):'未连接');
+    const label=key.toUpperCase()+' · '+(room?(room.name||connectedNames.get(room.id)||room.title||'直播间')+' · '+(sendPlatforms[platform]||'暂不支持发送'):'未连接');
+    if(option.textContent!==label)option.textContent=label;
   }
   const room=channels[$('sendTarget').value]?.room,unsupported=room?.external&&!sendPlatforms[room.platform];
   $('chatText').disabled=Boolean(unsupported);$('chatText').maxLength=room?.external?100:40;

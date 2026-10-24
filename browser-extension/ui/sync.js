@@ -21,17 +21,36 @@
     }
     clear() { this.items = []; }
   }
+  function playoutTarget(state, now, delay = state?.delay) {
+    return state?.started ? state.target + (now-state.at)/1000 - (delay-state.delay) : null;
+  }
   // Once started, follow a monotonic playout clock, not bursty download edges.
   function playoutStep(state, { now, current, ranges, edge, delay, ready }) {
     const contains = time => ranges.some(([a,b]) => time >= a + .03 && time <= b - .03);
-    if (state.delay !== delay) { state.delay = delay; state.started = false; state.driftAt = null; }
+    if (state.delay !== delay) {
+      if (state.started) { state.target -= delay - state.delay; state.adjusting = true; }
+      state.delay = delay; state.driftAt = null;
+    }
     if (!state.started) {
       const target = edge == null ? null : targetTime(ranges, edge, delay);
       if (target === null) return { wait: true, seek: null, rate: 1 };
       state.started = true; state.at = now; state.target = target;
       return { wait: false, seek: Math.abs(current-target) > .18 ? target : null, rate: 1 };
     }
-    const target = state.target + (now-state.at)/1000, delta = target-current;
+    let target = state.target + (now-state.at)/1000;
+    if (state.adjusting) {
+      if (contains(target)) {
+        state.adjusting = false;
+        return {wait:false,seek:Math.abs(current-target)>.08?target:null,rate:1};
+      }
+      // Build the requested delay if the older media has not arrived yet.
+      return {wait:true,seek:null,rate:1};
+    }
+    if (ranges.length && target < ranges[0][0] + .03) {
+      const available = edge == null ? null : targetTime(ranges, edge, delay);
+      if (available !== null) { state.at=now; state.target=target=available; state.driftAt=null; }
+    }
+    const delta = target-current;
     // An absent estimated target is not a reason to pause buffered playback.
     if (ready < 3) { state.driftAt = null; return { wait:false,seek:null,rate:1 }; }
     if (Math.abs(delta) > 1.5 && contains(target)) {
@@ -40,7 +59,7 @@
     } else state.driftAt = null;
     return {wait:false,seek:null,rate:Math.abs(delta)<.08?1:clamp(1+delta*.04,.98,1.02)};
   }
-  const api = { clamp, delays, targetTime, correction, ChatQueue, playoutStep };
+  const api = { clamp, delays, targetTime, correction, ChatQueue, playoutStep, playoutTarget };
   if (typeof module !== 'undefined') module.exports = api;
   else root.Sync = api;
 })(globalThis);

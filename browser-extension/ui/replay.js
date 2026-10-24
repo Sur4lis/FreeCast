@@ -8,7 +8,11 @@
     bufferSeconds:()=>seconds?seconds+90:150,
     setSeconds(n){if(![0,60,180,300].includes(n))return;if(this.active)this.live();const was=seconds;seconds=n;if(!was)startedAt=performance.now();localStorage.setItem('freecast-replay-seconds',String(n));for(const c of Object.values(channels)){this.configure(c);window.mediaBuffers?.trim(c,true);}if(!n){for(const h of Object.values(history))h.clear();window.vocal?.clearReplay();}else if(n<was){window.vocal?.pruneReplay?.();}this.render(true);},
     targets(now=performance.now()){
-      const d=getDelays();return Object.fromEntries(keys.map(k=>[k,channels[k]?.edge?.(now)==null?null:channels[k].edge(now)-d[k]+pauseLag]));
+      const d=getDelays();return Object.fromEntries(keys.map(k=>{
+        const pipe=window.vocal?.pipes?.[k],clock=pipe?.active?Sync.playoutTarget(pipe.feedPlayout,now,d[k]-pipe.delay):Sync.playoutTarget(channels[k]?.playout,now,d[k]);
+        const target=clock===null?(channels[k]?.edge?.(now)==null?null:channels[k].edge(now)-d[k]):clock-(pipe?.active?pipe.delay:0);
+        return [k,target===null?null:target+pauseLag];
+      }));
     },
     available(){
       if(!seconds||!running||keys.some(k=>!channels[k]))return [];
@@ -33,7 +37,7 @@
       const value=ReplayCore.nearest(lag,this.available());if(value===null){notice('两路回看缓存尚未就绪');return false;}
       if(lag<.25){this.live();return true;}
       const target=this.targets();this.active=true;pauseLag=0;anchor={};
-      for(const k of keys){const media=channels[k].media;anchor[k]=target[k]-value;media.currentTime=anchor[k];media.playbackRate=this.rate;channels[k].playout={};}
+      for(const k of keys){const media=channels[k].media;anchor[k]=target[k]-value;media.currentTime=anchor[k];media.playbackRate=this.rate;}
       window.vocal?.seekReplay();this.restoreChat();this.render(true);return true;
     },
     capturePause(){
@@ -57,7 +61,8 @@
     live(){
       this.active=false;this.rate=1;pauseLag=0;paused=false;$('pause').textContent='暂停';$('player').classList.remove('paused');
       window.vocal?.endReplay();
-      for(const k of keys){const c=channels[k];if(!c)continue;c.playout={};c.media.playbackRate=1;const point=Sync.targetTime(ranges(c.media),c.edge(performance.now()),getDelays()[k]);if(point!==null)c.media.currentTime=point;}
+      const target=this.targets();
+      for(const k of keys){const c=channels[k];if(!c)continue;c.media.playbackRate=1;const point=target[k];if(point!==null&&ranges(c.media).some(([a,b])=>point>=a+.05&&point<=b-.05))c.media.currentTime=point;}
       if(running&&keys.every(k=>channels[k])){this.restoreChat();const adjustment=Number($('chatOffset').value)||0;for(const k of keys)(k==='a'?queue:queueB).take(channels[k].media.currentTime,adjustment);}
       this.render(true);
     },

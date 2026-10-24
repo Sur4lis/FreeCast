@@ -32,13 +32,13 @@ const vocalTemplate = {
       if(token!==generation||!running)throw Error('直播已切换');
       if(!info.realtime)throw Error('浏览器 GPU 无法实时处理');
       this.delay=(info.delay||8)+(vocal.selectedCount()>1?6:0);this.provider=info.provider;this.device=info.device;this.profile=info.profile;
-      this.active=true;this.feedStarted=false;mix['audio'+this.sourceKey.toUpperCase()]=true;
+      this.active=true;this.feedStarted=false;this.feedPlayout={};this.lastHealthyAt=performance.now();
       this.reset();applyMix();updateOffset();save();
     }catch(error){if(revision===this.enableRevision)this.fail(error);}
     finally{if(revision===this.enableRevision){this.loading=false;vocal.controls();}}
   },
-  disable(){this.enableRevision++;this.loading=false;this.active=false;this.error='';this.feed?.pause();this.reset();this.clearReplay?.();this.mirror?.suspend?.();},
-  fail(error){this.disable();this.error=String(error.message||error);vocal.releaseIfIdle();applyMix();updateOffset();save();vocal.controls();},
+  disable(){this.enableRevision++;this.loading=false;this.active=false;this.error='';this.feedStarted=false;this.feedPlayout={};this.feed?.pause();this.reset();this.clearReplay?.();this.mirror?.suspend?.();},
+  fail(error){this.disable();this.error=String(error.message||error);vocal.releaseIfIdle();this.ctx?.resume?.().catch(()=>{});applyMix();updateOffset();save();vocal.controls();},
   accept(block){
     if(!this.active||block.epoch!==this.epoch||(paused&&!window.replay?.active))return;
     if(this.lastInputEnd!==null){
@@ -76,7 +76,7 @@ const vocalTemplate = {
       this.firstSound=Math.min(this.firstSound,when);
       this.timeline.push({when,mediaStart,end:when+this.core/this.rate});
       this.profile=result.nextProfile||result.profile||this.profile;
-      this.lastMs=result.ms;vocal.controls();
+      this.lastMs=result.ms;this.lastHealthyAt=performance.now();vocal.controls();
     }catch(error){if(epoch===this.epoch)this.fail(error);}finally{this.inflight=false;if(this.active)this.pump();}
   },
   schedule(channels,when,destination){
@@ -111,26 +111,23 @@ const vocalTemplate = {
   tick(){
     if(!this.active||!this.ctx||!running||demo)return;
     const now=this.ctx.currentTime,video=this.media();
-    if(paused&&!window.replay?.active){this.feed.pause();video.pause();return;}
-    if(!this.mirror||this.mirror.closed){this.ready=false;video.pause();return;}
+    if(paused&&!window.replay?.active){this.lastHealthyAt=performance.now();this.feed.pause();video.pause();return;}
+    if(!this.mirror||this.mirror.closed){this.fail(Error('音频预处理已中断，请重试 AI 或使用原声'));return;}
     const ranges=[];for(let i=0;i<this.feed.buffered.length;i++)ranges.push([this.feed.buffered.start(i),this.feed.buffered.end(i)]);
     const edge=channels[this.sourceKey]?.edge(performance.now());
-    const candidate=edge==null?null:targetTime(ranges,edge,getDelays()[this.sourceKey]-this.delay);
-    if(!ranges.length || (candidate===null&&!this.feedStarted)){this.feed.pause();video.pause();return;}
-    const target=candidate??this.feed.currentTime;
-    // Fixed rate means the audio sample clock remains the authoritative clock.
     const requested=getDelays()[this.sourceKey]-this.delay;
-    if(this.feedRequest!==requested || !this.feedStarted){this.feedRequest=requested;this.feedStarted=true;if(Math.abs(this.feed.currentTime-target)>.15&&!this.feed.seeking){this.seekReason='requested-delay';this.feed.currentTime=target;}}
-    // Live-edge estimates jump at segment boundaries. Do not seek on those jumps.
-    // Correct only persistent, large drift or a buffer eviction.
-    const inside=ranges.some(([start,end])=>this.feed.currentTime>=start-.1&&this.feed.currentTime<=end+.1);
-    if(Math.abs(this.feed.currentTime-target)>10){this.driftSince??=now;}else this.driftSince=null;
-    if((!inside || (this.driftSince!=null&&now-this.driftSince>10))&&!this.feed.seeking){this.seekReason=!inside?'buffer-evicted':'persistent-drift';this.feed.currentTime=target;this.driftSince=null;}
+    if(performance.now()-(this.lastHealthyAt||0)>Math.max(30000,(this.delay+Math.max(0,requested)+20)*1000)){this.fail(Error('AI 音轨长时间未输出，请重试 AI 或切换线路'));return;}
+    const action=Sync.playoutStep(this.feedPlayout ||= {},{now:performance.now(),current:this.feed.currentTime,ranges,edge,delay:requested,ready:this.feed.readyState});
+    if(action.wait){this.feed.pause();video.pause();return;}
+    this.feedRequest=requested;this.feedStarted=true;
+    if(action.seek!==null&&!this.feed.seeking){this.seekReason='playout-clock';this.feed.currentTime=action.seek;}
+    // Capture stays at the sample rate; only the video uses rate correction.
     this.feed.playbackRate=1;if(this.feed.paused)this.feed.play().catch(e=>{if(e.name!=="AbortError"&&this.active)this.fail(e);});
     this.anchor();this.ready=now>=this.firstSound;
     while(this.timeline.length>1&&this.timeline[1].when<=now)this.timeline.shift();
-    if(window.replay?.active)return;
     const block=this.timeline.find(b=>b.when<=now&&b.end>now);
+    if(block)this.lastHealthyAt=performance.now();
+    if(window.replay?.active)return;
     if(!block){this.ready=false;video.pause();return;}
     const desired=this.mediaAt(now-this.delay)??(block.mediaStart+now-block.when),diff=desired-video.currentTime;
     this.syncError=diff;

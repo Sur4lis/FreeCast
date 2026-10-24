@@ -44,7 +44,7 @@ for (const file of runtime) {
   add(appZip, prefix + '/FreeCast浏览器插件/' + relative, bytes);
   sums.push(digest(bytes) + '  ' + relative);
 }
-add(appZip, prefix + '/文件校验_SHA256.txt', Buffer.from(sums.join('\n') + '\n'));
+add(appZip, prefix + '/FreeCast浏览器插件/文件校验_SHA256.txt', Buffer.from(sums.join('\n') + '\n'));
 const packageHash = write(appZip, prefix + '.zip');
 const sourceZip = new Zip();
 const excluded = new Set(['release', 'node_modules', '.cache', '.git']);

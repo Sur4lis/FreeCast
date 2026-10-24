@@ -4,7 +4,9 @@
   function geometry(){const width=overlay.clientWidth,height=overlay.clientHeight,line=Math.ceil(mix.danmakuSize*1.8)+4;return{width,height,line,rows:Math.max(0,Math.floor(height*(mix.danmakuArea/100)/line))};}
   // SC covers only its own rectangle. Never move or delete entire comment lanes.
   function maskSC(){
-    const sc=$('superChatOverlay'),rect=overlay.getBoundingClientRect();let clip='none';
+    const sc=$('superChatOverlay');
+    if((sc.hidden||!sc.children.length)&&!window.chatAvoidance?.regions().length){if(overlay.style.clipPath!=='none')overlay.style.clipPath='none';return;}
+    const rect=overlay.getBoundingClientRect();let clip='none';
     if(!sc.hidden&&sc.children.length&&rect.width&&rect.height){
       const box=sc.getBoundingClientRect(),left=Math.max(0,box.left-rect.left-4),right=Math.min(rect.width,box.right-rect.left+4),top=Math.max(0,box.top-rect.top-4),bottom=Math.min(rect.height,box.bottom-rect.top+4);
       if(right>left&&bottom>top)clip=`path(evenodd, "M0 0H${rect.width}V${rect.height}H0Z M${left} ${top}H${right}V${bottom}H${left}Z")`;
@@ -20,7 +22,7 @@
   function layout(){
     const g=geometry(),key=[g.width,g.height,g.line,mix.danmakuArea,mix.danmakuDensity].join(':');
     // Reflowing moving comments onto fewer lanes would create collisions. Sidebar history stays intact.
-    if(signature&&signature!==key)overlay.replaceChildren();signature=key;maskSC();return g;
+    if(signature&&signature!==key)overlay.replaceChildren();if(signature!==key){signature=key;maskSC();}return g;
   }
   function speed(bullet){
     if(typeof bullet.getAnimations==='function'){

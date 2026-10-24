@@ -7,9 +7,7 @@ let channels = {}, running = false, paused = false, demo = false, generation = 0
 let connecting = null;
 let offset = 0, pauseStarted = 0, pauseLag = 0, demoStart = 0, demoPaused = 0, lastDemoMessage = -1;
 let audioContext, oscillator, gain, lane = 0;
-const selfDanmakuColors = Object.freeze({ '#ffffff': '白色（默认）', '#ff6b6b': '珊瑚红', '#ffb347': '橙色', '#ffd866': '金黄色', '#80ed99': '绿色', '#66d9ef': '天蓝色', '#c7a0ff': '紫色', '#ff99cc': '粉色' });
-function normalizeSelfDanmakuColor(value) { const color = typeof value === 'string' ? value.toLowerCase() : ''; return Object.hasOwn(selfDanmakuColors, color) ? color : '#ffffff'; }
-const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50, selfDanmakuColor: '#ffffff' });
+const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50 });
 let mix = {...defaultMix};
 let favorites = [], activeSource = 'a', viewMode = 'normal';
 const defaultFavorites = [
@@ -50,7 +48,6 @@ try {
     if([0,10,15,30,60,120,300].includes(s.mix?.scMaxDuration))mix.scMaxDuration=s.mix.scMaxDuration;
     if(Number.isFinite(s.mix?.danmakuDensity))mix.danmakuDensity=clamp(Math.round(s.mix.danmakuDensity),20,100);
     if([25,50,75,100].includes(s.mix?.danmakuArea))mix.danmakuArea=s.mix.danmakuArea;
-    mix.selfDanmakuColor = normalizeSelfDanmakuColor(s.mix?.selfDanmakuColor);
     mix.main = s.mix?.main === 'a' ? 'a' : 'b';
     favorites = Array.isArray(s.favorites) ? s.favorites.filter(f => ((Number.isSafeInteger(f.id) && f.id > 0) || (typeof f.id==='string' && /^https?:\/\//.test(f.id))) && typeof f.name === 'string').slice(0, 100) : [];
     activeSource = s.activeSource === 'b' ? 'b' : 'a';

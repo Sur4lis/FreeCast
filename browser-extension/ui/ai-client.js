@@ -7,12 +7,13 @@
  function request(type,data={},timeout=30000){
   return new Promise((resolve,reject)=>{
    if(!worker){reject(Error('过滤引擎未启动'));return;}
-   const key=++id,timer=setTimeout(()=>release('处理超时，请关闭过滤或检查浏览器图形加速'),timeout);pending.set(key,{resolve,reject,timer});
+   const key=++id,timer=setTimeout(()=>release(type==='init'?'AI 初始化超时，请重试或使用原声':'AI 处理超时，已停止处理，请尝试兼容模式'),timeout);pending.set(key,{resolve,reject,timer});
    try{worker.postMessage({id:key,type,...data},data.left?[data.left.buffer,data.right.buffer]:[]);}catch(error){clearTimeout(timer);pending.delete(key);reject(error);}
   });
  }
  window.live.vocalInit=async(options={})=>{
   if(info)return info;if(initializing)return initializing;
+  if(typeof navigator!=='undefined'&&!navigator.gpu&&!options.forceCpu)throw Error('当前浏览器未提供 WebGPU，请更新浏览器并检查图形加速');
   worker=new Worker(new URL('../ai/worker.mjs',location.href),{type:'module'});
   const token=revision,currentWorker=worker;
   worker.onmessage=({data})=>{const p=pending.get(data.id);if(!p)return;pending.delete(data.id);clearTimeout(p.timer);data.error?p.reject(Error(data.error)):p.resolve(data);};

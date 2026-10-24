@@ -9,7 +9,7 @@
     const fallback=message.price>=2000?'#AB1A32':message.price>=1000?'#E09443':message.price>=500?'#E2B52B':message.price>=100?'#1E9576':message.price>=50?'#427D9E':'#2A60B2';
     const color=/^#[0-9a-f]{6}$/i.test(message.scColor||'')?message.scColor:fallback;
     const rgb=[1,3,5].map(i=>parseInt(color.slice(i,i+2),16));
-    el.style.backgroundColor=`rgba(${rgb.join(',')},.78)`;el.style.borderColor=`rgba(${rgb.join(',')},.85)`;
+    el.style.backgroundColor=`rgba(${rgb.join(',')},.94)`;el.style.borderColor=`rgba(${rgb.join(',')},.85)`;
     el.style.color=rgb[0]*.299+rgb[1]*.587+rgb[2]*.114>145?'#273241':'#fff';
     const heading=document.createElement('a');heading.className='superchat-heading';
     window.chatBlocking?.decorate(el,heading,message);
@@ -47,11 +47,13 @@
     const extra=Number($('chatOffset').value)||0;
     for(const [id,m] of active)if(window.chatBlocking?.isBlocked(m)||window.chatRules?.blocked(m))active.delete(id);
     for(const [id,m] of active){const media=channels[m.source]?.media;if(media&&media.currentTime>=m.at+duration(m)+extra)active.delete(id);}
-    overlay.hidden=!mix.showSC||!mix.showChat;
+    const hidden=!mix.showSC||!mix.showChat;
+    let changed=overlay.hidden!==hidden;
+    if(changed)overlay.hidden=hidden;
     const visible=[...active.values()].slice(-2),wanted=new Set(visible.map(key));
-    for(const el of [...overlay.children])if(!wanted.has(el.dataset.source+':'+el.dataset.scId))el.remove();
-    for(const m of visible){let el=[...overlay.children].find(el=>el.dataset.source===m.source&&el.dataset.scId===m.id);if(!el){el=card(m,true);overlay.append(el);}}
-    window.danmakuLayout?.maskSC();
+    for(const el of [...overlay.children])if(!wanted.has(el.dataset.source+':'+el.dataset.scId)){el.remove();changed=true;}
+    for(const m of visible){let el=[...overlay.children].find(el=>el.dataset.source===m.source&&el.dataset.scId===m.id);if(!el){el=card(m,true);overlay.append(el);changed=true;}}
+    if(changed)window.danmakuLayout?.maskSC();
   }
   window.superChats={add,remove,clear,tick};tick();
 })();

@@ -4,13 +4,21 @@
 
 ## 下载与安装
 
-[下载 v1.21 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.21/FreeCast_v1.21.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.21/FreeCast_Android_v1.21.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.21)
+[下载 v1.22 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.22/FreeCast_v1.22.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.22/FreeCast_Android_v1.22.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.22)
 
 1. 完整解压安装包。
 2. 在 Chrome / Edge 的扩展管理页开启「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的「FreeCast浏览器插件」文件夹。
 
 升级时覆盖原插件目录并刷新扩展，原有收藏和设置保留。请保留插件文件夹。
+
+## v1.22 更新
+
+- 优化重复弹幕合并，A、B 两路分别合并并显示次数。
+- 支持屏蔽画面弹幕，关键词可快捷添加、删除。
+- 为自己发送的弹幕添加天蓝色边框标识。
+- 暂时停用“＋1”功能。
+- 修复若干 BUG。
 
 ## v1.21 更新
 
@@ -38,7 +46,7 @@ npm run pack
 
 随后可直接加载 `browser-extension/`，安装包输出到 `release/`。
 
-模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.21 安装包已包含这些文件，无需额外下载。
+模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.22 安装包已包含这些文件，无需额外下载。
 
 AI 在本地运行，需要硬件 WebGPU 支持。第三方库及模型来源、许可见 [第三方说明](browser-extension/第三方说明.txt)。
 
