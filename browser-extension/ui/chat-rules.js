@@ -3,7 +3,7 @@
   let words=[],mergeEnabled=false;const recent=new Map(),messageText=new WeakMap();
   try{const s=JSON.parse(localStorage.getItem('freecast-chat-rules')||'{}'),seen=new Set();words=(Array.isArray(s.words)?s.words:[]).filter(x=>{if(typeof x!=='string'||!normalize(x)||seen.has(normalize(x)))return false;seen.add(normalize(x));return true;}).map(x=>x.trim()).slice(0,100);mergeEnabled=s.merge===true;}catch{}
   const imageKey=e=>e?.unique||e?.url||'';
-  const key=m=>JSON.stringify([m.source==='b'?'b':'a',normalize(m.text),imageKey(m.emoticon),(m.emotes||[]).map(e=>[e.token,imageKey(e)])]);
+  const key=m=>JSON.stringify([m.source==='b'?'b':'a',m.isSelf===true,normalize(m.text),imageKey(m.emoticon),(m.emotes||[]).map(e=>[e.token,imageKey(e)])]);
   const stamp=m=>Number.isFinite(m.receivedAt)?['received',m.receivedAt]:Number.isFinite(m.at)?['media',m.at*1000]:['render',performance.now()];
   function blocked(m){const text=normalize(m.text);return words.some(word=>text.includes(normalize(word)));}
   function tag(el,m){messageText.set(el,String(m.text||''));}

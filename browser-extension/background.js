@@ -70,11 +70,7 @@ async function rules() {
 let ready = rules();
 ready.catch(() => {});
 async function openPlayer() {
-  const tabs = await chrome.tabs.query({url:pageUrl+'*'});
-  if(tabs.length) {
-    await chrome.tabs.update(tabs[0].id,{active:true});
-    await chrome.windows.update(tabs[0].windowId,{focused:true});
-  } else await chrome.tabs.create({url:pageUrl});
+  await chrome.tabs.create({url:pageUrl});
 }
 chrome.action.onClicked.addListener(()=>openPlayer().catch(()=>{}));
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{
