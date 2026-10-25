@@ -1,6 +1,61 @@
 import { createRoomApi } from './rooms.mjs';
 import { signWbi } from './wbi.mjs';
 
+const liveUpId = value => /^\d+$/.test(String(value ?? '')) && Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : 0;
+// The live-up feed identifies each room only through its public live link.
+function liveUpRoom(value) {
+  const direct = liveUpId(value);
+  if (direct) return direct;
+  if (typeof value !== 'string') return 0;
+  try {
+    const url = new URL(value);
+    if (url.hostname !== 'live.bilibili.com' || !['http:', 'https:'].includes(url.protocol) || url.username || url.password) return 0;
+    return liveUpId(url.pathname.replace(/^\/+|\/+$/g, ''));
+  } catch { return 0; }
+}
+function liveUpFace(value) {
+  try {
+    const url = new URL(String(value).startsWith('//') ? 'https:' + value : String(value));
+    if (url.protocol !== 'https:' || url.username || url.password) return '';
+    if (!['hdslb.com', 'biliimg.com'].some(domain => url.hostname === domain || url.hostname.endsWith('.' + domain))) return '';
+    return url.href;
+  } catch { return ''; }
+}
+function liveUpArray(data) {
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.list)) return data.list;
+  const queue = [data];
+  for (let seen = 0; queue.length && seen < 2000; seen++) {
+    const node = queue.shift();
+    if (!node || typeof node !== 'object') continue;
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) { if (value.some(item => item && typeof item === 'object' && (item.room_id || item.roomId || item.roomid || item.link))) return value; }
+      else if (value && typeof value === 'object') queue.push(value);
+    }
+  }
+  return [];
+}
+// Only publishable fields are returned: favorites never receive raw API payloads.
+export function parseLiveUpItems(data) {
+  const items = [], seen = new Set();
+  for (const value of liveUpArray(data)) {
+    if (!value || typeof value !== 'object') continue;
+    const roomId = liveUpRoom(value.room_id || value.roomId || value.roomid || value.link);
+    if (!roomId || seen.has(roomId)) continue;
+    if (value.live_status !== undefined && Number(value.live_status) !== 1) continue;
+    const name = String(value.uname || value.name || '').trim().slice(0, 100);
+    if (!name) continue;
+    const uid = liveUpId(value.uid || value.mid);
+    seen.add(roomId);
+    items.push({id: roomId, inputId: roomId, name, avatar: liveUpFace(value.face || value.avatar), title: String(value.title || '').trim().slice(0, 200), roomId, ...(uid ? {anchorId: uid} : {}), platform: 'bilibili'});
+  }
+  return items;
+}
+const liveUpQuery = offset => 'web_location=333.1007'
+  + '&x-bili-locale-json=' + encodeURIComponent(JSON.stringify({c_locale: {language: 'zh', script: 'Hans'}, always_translate: false}))
+  + '&x-bili-device-req-json=' + encodeURIComponent(JSON.stringify({platform: 'web', device: 'pc', spmid: '333.1007', mobi_app: 'web_cn'}))
+  + (offset === null ? '' : '&offset=' + offset);
+
 // Credentials stay in the browser cookie jar. Never copy SESSDATA into storage or a message.
 export function createBackend({ request = fetch, cookie, cooldownStore, ensureDevice }) {
   const pending = new Set();
@@ -15,6 +70,27 @@ export function createBackend({ request = fetch, cookie, cooldownStore, ensureDe
   }
   const api = async path => (await json('https://api.live.bilibili.com' + path)).data;
   const rooms = createRoomApi(api);
+  // The live-up feed only lists followed anchors who are currently streaming.
+  async function liveFollowing() {
+    const items = new Map();
+    let offset = null;
+    for (let page = 0; page < 5; page++) {
+      let data;
+      try { data = (await json('https://api.bilibili.com/x/polymer/web-dynamic/v1/live-up?' + liveUpQuery(offset))).data; }
+      catch (error) {
+        if (/-101|未登录/.test(error.message)) throw Error('请先在 B 站官网登录，再导入关注列表');
+        if (/-352|校验/.test(error.message)) throw Error('B 站要求验证，请先在同一浏览器打开 B 站完成验证');
+        throw error;
+      }
+      const before = items.size;
+      for (const item of parseLiveUpItems(data)) if (!items.has(item.id)) items.set(item.id, item);
+      const next = Number(data?.offset);
+      // Stop when the feed has no more pages, repeats an offset, or returns nothing new.
+      if (!data?.has_more || !Number.isSafeInteger(next) || next === offset || items.size === before) break;
+      offset = next;
+    }
+    return {items: [...items.values()], total: items.size};
+  }
   async function status() {
     const response = await request('https://api.bilibili.com/x/web-interface/nav', { credentials: 'include', redirect: 'error', signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('登录状态检查失败：HTTP ' + response.status);
@@ -99,5 +175,5 @@ export function createBackend({ request = fetch, cookie, cooldownStore, ensureDe
     if(!emote||emote.type!=='image'||!emote.allowed)throw Error('当前账号或房间不能发送此表情，请刷新表情列表');
     return {...emote,room:realRoom,pageRoom};
   }
-  return { ...rooms, status, chatConfig, sendChat, emoticons, prepareEmote };
+  return { ...rooms, status, chatConfig, sendChat, emoticons, prepareEmote, liveFollowing };
 }

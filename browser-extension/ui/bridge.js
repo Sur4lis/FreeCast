@@ -14,6 +14,7 @@
     resolveRoom:(room,quality,options={})=>rpc('resolve',{room,quality,preview:options.preview===true,line:options.line}),
     prepareSources:rooms=>rpc('prepareSources',{rooms}),
     getProfile:room=>rpc('profile',{room}),
+    liveFollowing:()=>rpc('liveFollowing'),
     roomStats:room=>rpc('roomStats',{room}),
     authStatus:()=>rpc('status'),authBrowser:()=>rpc('login'),qualitySession:()=>rpc('qualitySession'),
     sendChat:(room,text,expectedUid,options={})=>rpc('sendChat',{room,text,expectedUid,...options}),

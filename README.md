@@ -51,3 +51,5 @@ npm run pack
 AI 在本地运行，需要硬件 WebGPU 支持。第三方库及模型来源、许可见 [第三方说明](browser-extension/第三方说明.txt)。
 
 [问题反馈](https://github.com/Sur4lis/FreeCast/issues)
+
+

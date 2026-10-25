@@ -128,6 +128,64 @@ $('favoriteForm').addEventListener('submit', async event => {
   } catch (error) { if (current()) $('favoriteError').textContent = error.message.replace(/^Error invoking remote method '[^']+': Error: /, ''); }
   finally { if (request === favoriteRequest) $('favoriteSubmit').disabled = false; }
 });
+let followingRequest = 0, followingItems = [];
+const followingAvatarFallback = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="#35412e"/><text x="20" y="27" text-anchor="middle" fill="#c8f583" font-size="18">UP</text></svg>');
+function refreshFollowingStatus() {
+  const pending = followingItems.filter(item => !favorites.some(f => String(f.id) === String(item.id) || String(f.inputId) === String(item.inputId))).length;
+  $('followingStatus').textContent = !followingItems.length
+    ? '没有找到正在直播的关注 UP 主'
+    : `正在直播 ${followingItems.length} 位${pending ? '，点击右侧按钮逐个收藏' : '，已全部收藏'}${favorites.length >= 100 ? '；收藏已达上限 100' : ''}`;
+}
+function importFollowingItem(item, button) {
+  if (favorites.length >= 100) { notice('最多收藏 100 个 UP 主', true); return; }
+  if (favorites.some(f => String(f.id) === String(item.id) || String(f.inputId) === String(item.inputId))) { button.textContent = '已收藏'; button.disabled = true; return; }
+  favorites.push({...item}); renderFavorites(); save();
+  button.textContent = '已收藏'; button.disabled = true;
+  const row = button.closest('.following-item'); row?.classList.add('is-added');
+  const sub = row?.querySelector('small'); if (sub) sub.textContent = '已在收藏中';
+  refreshFollowingStatus(); notice(`已收藏 ${item.name}`);
+}
+function renderFollowing() {
+  const list = $('followingList'); list.replaceChildren();
+  for (const item of followingItems) {
+    const owned = favorites.some(f => String(f.id) === String(item.id) || String(f.inputId) === String(item.inputId));
+    const row = document.createElement('div'); row.className = 'following-item' + (owned ? ' is-added' : '');
+    const img = document.createElement('img'); img.alt = item.name + '头像'; img.referrerPolicy = 'no-referrer';
+    let url; try { url = new URL(item.avatar); } catch {}
+    img.src = url?.protocol === 'https:' ? url.href : followingAvatarFallback;
+    img.addEventListener('error', () => { img.src = followingAvatarFallback; }, { once: true });
+    const meta = document.createElement('span'); meta.className = 'following-meta';
+    const name = document.createElement('strong'); name.textContent = item.name;
+    const sub = document.createElement('small'); sub.textContent = owned ? '已在收藏中' : (item.title || '房间 ' + item.roomId);
+    meta.append(name, sub);
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'primary following-add';
+    button.textContent = owned ? '已收藏' : '导入'; button.disabled = owned;
+    button.setAttribute('aria-label', (owned ? '已收藏 ' : '收藏 ') + item.name);
+    button.addEventListener('click', () => importFollowingItem(item, button));
+    row.append(img, meta, button); list.append(row);
+  }
+  refreshFollowingStatus();
+}
+async function openFollowing() {
+  const request = ++followingRequest;
+  followingItems = []; $('followingList').replaceChildren();
+  $('followingStatus').textContent = '正在读取 B 站关注列表…'; $('importFollowing').disabled = true;
+  if (!$('followingDialog').open) $('followingDialog').showModal();
+  try {
+    await window.live.ensureSources(['1']);
+    if (request !== followingRequest || !$('followingDialog').open) return;
+    const result = await window.live.liveFollowing();
+    if (request !== followingRequest || !$('followingDialog').open) return;
+    followingItems = Array.isArray(result?.items) ? result.items : [];
+    renderFollowing();
+  } catch (error) {
+    if (request !== followingRequest || !$('followingDialog').open) return;
+    $('followingStatus').textContent = String(error.message || error).replace(/^Error invoking remote method '[^']+': Error: /, '');
+  } finally { $('importFollowing').disabled = false; }
+}
+$('importFollowing').addEventListener('click', openFollowing);
+$('followingCancel').addEventListener('click', () => { followingRequest++; $('followingDialog').close(); });
+$('followingDialog').addEventListener('cancel', () => { followingRequest++; });
 window.addEventListener('beforeunload', save);
 applyMix(); renderFavorites(); selectSource(activeSource); updateView();
 const playerSizeObserver=new ResizeObserver(() => {

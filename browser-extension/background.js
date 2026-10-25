@@ -60,7 +60,7 @@ async function rules() {
   const siteRules = [['huya.com','https://www.huya.com/'],['douyu.com','https://www.douyu.com/'],['douyin.com','https://live.douyin.com/']].map(([domain,referer],i)=>({
     id:10+i,priority:1,action:{type:'modifyHeaders',requestHeaders:[{header:'Referer',operation:'set',value:referer},{header:'Origin',operation:'set',value:new URL(referer).origin}]},condition:{initiatorDomains:[chrome.runtime.id],requestDomains:[domain],resourceTypes:['xmlhttprequest','websocket']}
   }));
-  await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds:[1,10,11,12], addRules:[...siteRules,{
+  await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds:[1,2,10,11,12], addRules:[...siteRules,{id:2,priority:2,action:{type:'modifyHeaders',requestHeaders:[{header:'Referer',operation:'set',value:'https://www.bilibili.com/'},{header:'Origin',operation:'set',value:'https://www.bilibili.com'}]},condition:{initiatorDomains:[chrome.runtime.id],requestDomains:['api.bilibili.com'],urlFilter:'/x/polymer/web-dynamic/v1/live-up',resourceTypes:['xmlhttprequest']}},{
     id:1, priority:1, action:{type:'modifyHeaders', requestHeaders:[
       {header:'Referer',operation:'set',value:'https://live.bilibili.com/'},
       {header:'Origin',operation:'set',value:'https://live.bilibili.com'}
@@ -87,6 +87,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
         return {hasSession:cookies.some(value=>Boolean(value?.value))};
       }
       case 'profile': return sourceProfile(message.room);
+      case 'liveFollowing': return backend.liveFollowing();
       case 'roomStats': return roomStats(message.room);
       case 'resolve': return resolveSource(message.room,message.quality,message.preview===true,message.line);
       case 'prepareSources': {

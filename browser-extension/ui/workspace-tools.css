@@ -12,7 +12,7 @@
 .dual-ai-rows{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}.ai-route{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--soft)}.ai-route label{display:flex;align-items:center;gap:5px}.ai-route input[type=range]{width:85px}.ai-route small{flex-basis:100%;color:var(--muted);overflow-wrap:anywhere}
 #audioSettings>div[hidden]{display:none!important}#audioSettings .dual-ai-rows select{background:var(--control);color:var(--text);border-color:var(--line)}
 :root #audioSettings .filter-notice{color:var(--muted)}
-.setup-toolbar #favorites{flex:1;min-width:80px}.setup-toolbar #combinations{display:flex;gap:10px;max-width:34%;overflow-x:auto;padding:11px 5px 4px;scrollbar-width:thin}.combination{flex-shrink:0}.combination .favorite-main{color:var(--a);font-size:12px;white-space:nowrap;max-width:210px;overflow:hidden;text-overflow:ellipsis}.setup-toolbar #addCombination{font-size:12px;padding:5px 10px;white-space:nowrap}.repeat-count{color:var(--a);border:1px solid var(--line);border-radius:9px;padding:0 5px;margin-left:6px;font-size:11px}
+.setup-toolbar #favorites{flex:1;min-width:80px}.setup-toolbar #combinations{display:flex;gap:10px;max-width:34%;overflow-x:auto;padding:11px 5px 4px;scrollbar-width:thin}.combination{flex-shrink:0}.combination .favorite-main{color:var(--a);font-size:12px;white-space:nowrap;max-width:210px;overflow:hidden;text-overflow:ellipsis}.setup-toolbar #importFollowing,.setup-toolbar #addCombination{font-size:12px;padding:5px 10px;white-space:nowrap}.repeat-count{color:var(--a);border:1px solid var(--line);border-radius:9px;padding:0 5px;margin-left:6px;font-size:11px}
 #avoidanceEditor{position:absolute;z-index:25;touch-action:none;cursor:crosshair;background:color-mix(in srgb,var(--a) 5%,transparent)}#avoidanceEditor[hidden]{display:none}.avoidance-actions{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:var(--tool-glass);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:8px;max-width:95%;z-index:2;cursor:default}.avoidance-actions span{font-size:12px;white-space:nowrap}.avoidance-region{position:absolute;border:2px dashed var(--a);border-radius:9px;background:color-mix(in srgb,var(--a) 18%,transparent);cursor:move;box-sizing:border-box}.avoidance-region button{position:absolute;right:2px;top:2px;width:24px;height:24px;padding:0;background:var(--panel);color:var(--text)}.avoidance-resize{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;border-right:3px solid var(--a);border-bottom:3px solid var(--a);border-radius:0 0 6px 0}
 /* Floating mini-window surfaces follow the active skin. */
 :root body:is(.view-full,.view-theater) #miniPanel :is(.mini-heading,.mini-timeline,#miniTools){background:var(--tool-glass);color:var(--text);border-color:var(--line)}
@@ -66,3 +66,14 @@ body.editing-avoidance .player-bottom{opacity:1;pointer-events:auto}.view-full.f
 .tools-dialog .merge-setting{border-top:1px solid var(--line);padding-top:18px;margin-top:20px}
 .chat-row[data-source=b] .repeat-count{color:var(--b,var(--a))}
 #danmaku .bullet-repeat-count{display:inline-block;box-sizing:content-box;vertical-align:baseline;width:5ch;margin-left:.35em;padding:0;border:0;border-radius:0;color:inherit;font-family:inherit;font-size:.8em;font-weight:700;text-align:left}
+#followingStatus{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 10px;min-height:18px}
+.following-list{display:flex;flex-direction:column;gap:6px;max-height:min(46vh,380px);overflow:auto;padding-right:2px}
+.following-list:empty{display:none}
+.following-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--soft,var(--control))}
+.following-item img{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--control);flex-shrink:0}
+.following-item .following-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.following-item strong,.following-item small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.following-item small{color:var(--muted);font-size:11px}
+.following-item.is-added{opacity:.6}
+.following-add{flex-shrink:0;min-width:64px;padding:6px 10px!important;font-size:12px}
+:root .tools-dialog .following-add:disabled{background:var(--control);color:var(--muted);border-color:var(--line);opacity:1}
