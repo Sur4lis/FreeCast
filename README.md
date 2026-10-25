@@ -4,13 +4,24 @@
 
 ## 下载与安装
 
-[下载 v1.22 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.22/FreeCast_v1.22.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.22/FreeCast_Android_v1.22.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.22)
+[下载 v1.23 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.23/FreeCast_v1.23.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.23/FreeCast_Android_v1.23.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.23)
 
 1. 完整解压安装包。
 2. 在 Chrome / Edge 的扩展管理页开启「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的「FreeCast浏览器插件」文件夹。
 
 升级时覆盖原插件目录并刷新扩展，原有收藏和设置保留。请保留插件文件夹。
+
+## v1.23 更新
+
+- 新增关注导入，支持将 B 站、斗鱼、虎牙正在直播的关注主播加入收藏。
+- 新增小窗透明度调节，方便叠加画面、对照计时调整延迟。
+- 新增全屏小窗状态记忆，再次进入全屏时保留上次的显示或隐藏状态。
+- 新增自动、流畅、完整三种显示模式，优化低性能设备和虚拟机的播放体验。
+- 优化延迟微调，提高 0.1 秒调整的准确性。
+- 优化直播与弹幕断线后的自动恢复。
+- 优化 PC 端 AI 显卡识别与异常提示。
+- 修复若干 BUG。
 
 ## v1.22 更新
 
@@ -46,7 +57,7 @@ npm run pack
 
 随后可直接加载 `browser-extension/`，安装包输出到 `release/`。
 
-模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.22 安装包已包含这些文件，无需额外下载。
+模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.23 安装包已包含这些文件，无需额外下载。
 
 AI 在本地运行，需要硬件 WebGPU 支持。第三方库及模型来源、许可见 [第三方说明](browser-extension/第三方说明.txt)。
 

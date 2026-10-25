@@ -38,7 +38,7 @@
   }
   function paintRanges() { if (active) ranges.forEach(paintRange); }
   const refreshRanges = () => queueMicrotask(paintRanges);
-  function idleVisible() { return !document.hidden && !get('placeholder').hidden && !reduced.matches; }
+  function idleVisible() { return !document.hidden && !get('placeholder').hidden && !reduced.matches && !window.playbackPerformance?.smooth(); }
   function drift() {
     driftTimer = 0;
     if (!active || !idleVisible()) return;
@@ -100,6 +100,7 @@
     });
     on(document, 'keydown', keydown);
     on(document, 'visibilitychange', syncAmbience);
+    on(window, 'freecast-render-mode-change', syncAmbience);
     on(reduced, 'change', syncAmbience);
     watch(get('placeholder'), { attributes: true, attributeFilter: ['hidden'] }, syncAmbience);
     watch(get('replayPosition'), { attributes: true, attributeFilter: ['min', 'max', 'disabled'] }, () => paintRange(get('replayPosition')));

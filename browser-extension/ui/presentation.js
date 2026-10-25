@@ -1,5 +1,7 @@
 (()=>{
-let minimized=false,lastView=viewMode;const avatarRevision={A:0,B:0},timers={};
+const miniStateKey='freecast-fullscreen-mini-hidden-v1';
+let minimized=false;try{minimized=localStorage.getItem(miniStateKey)==='true';}catch{}
+const avatarRevision={A:0,B:0},timers={};
 const names={A:'A',B:'B'},profiles={A:null,B:null};
 const platformNames={huya:'虎牙',douyu:'斗鱼',douyin:'抖音'};
 function updateFavorites(input,p){if(p.pendingProfile||p.profileIncomplete)return;let changed=false;for(const f of favorites){if(String(f.inputId||f.id)!==input)continue;for(const key of ['name','avatar','title','roomId','anchorId','platform'])if(p[key]!==undefined&&f[key]!==p[key]){f[key]=p[key];changed=true;}}if(changed){renderFavorites();save();}}
@@ -27,9 +29,10 @@ const avatar=async key=>{
   }catch(error){if(rev===avatarRevision[key])img.title='主播资料暂不可用：'+error.message;}
 };
 async function refreshFavorites(){const items=favorites.filter(f=>{try{return /(^|\.)(huya|douyu|douyin)\.com$/.test(new URL(f.inputId||f.id).hostname);}catch{return false;}});for(let i=0;i<items.length;i+=3)await Promise.all(items.slice(i,i+3).map(async f=>{const input=String(f.inputId||f.id);try{updateFavorites(input,await window.live.getProfile(input));}catch{}}));}
-window.presentation={roomInfo,profile(input){return Object.values(profiles).find(p=>p?.input===input)?.value;},name(key){const room=channels[key.toLowerCase()]?.room;return room?(room.name||connectedNames.get(room.id)||names[key]||key):names[key];},refresh,avatars(){for(const k of ['A','B'])avatar(k);refreshFavorites();},viewChanged(next){if(next!==lastView){minimized=false;lastView=next;}queueMicrotask(refresh);}};
+window.presentation={roomInfo,profile(input){return Object.values(profiles).find(p=>p?.input===input)?.value;},name(key){const room=channels[key.toLowerCase()]?.room;return room?(room.name||connectedNames.get(room.id)||names[key]||key):names[key];},refresh,avatars(){for(const k of ['A','B'])avatar(k);refreshFavorites();},viewChanged(){queueMicrotask(refresh);}};
 $('mainQuality').addEventListener('change',()=>{const src=$('quality'+mainKey());src.value=$('mainQuality').value;src.dispatchEvent(new Event('change'));refresh();});
-$('minimizeMini').addEventListener('click',()=>{if(viewMode!=='full')return;minimized=true;refresh();});$('restoreMini').addEventListener('click',()=>{minimized=false;refresh();});
+function rememberMini(hidden){minimized=hidden;try{localStorage.setItem(miniStateKey,String(hidden));}catch{}refresh();}
+$('minimizeMini').addEventListener('click',()=>{if(viewMode==='full')rememberMini(true);});$('restoreMini').addEventListener('click',()=>{if(viewMode==='full')rememberMini(false);});
 for(const k of ['A','B']){$('avatar'+k).addEventListener('error',()=>{if(!$('avatar'+k).src.endsWith('/assets/avatar.svg'))$('avatar'+k).src='assets/avatar.svg';});$('room'+k).addEventListener('input',()=>{avatarRevision[k]++;clearInfo(k);renderChatStatus();$('avatar'+k).src='assets/avatar.svg';clearTimeout(timers[k]);timers[k]=setTimeout(()=>avatar(k),600);});}
 refresh();window.presentation.avatars();
 $('toggleAudioSettings').addEventListener('click',()=>{const open=$('audioSettings').hidden;$('audioSettings').hidden=!open;$('toggleAudioSettings').setAttribute('aria-expanded',String(open));$('toggleAudioSettings').textContent=open?'收起设置':'音频设置';});

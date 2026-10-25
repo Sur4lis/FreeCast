@@ -1,8 +1,8 @@
 (()=>{
   const MAX_PENDING_BYTES=32*1024*1024,MAX_PENDING_SEGMENTS=512;
-  function policy(seconds,delay=0,mobile=false){
-    const retain=Math.max(mobile?30:90,seconds)+Math.max(0,delay)+20;
-    return {retain,forward:Math.max(30,seconds+Math.max(0,delay)+10),bytes:(mobile?32:64)*1024*1024};
+  function policy(seconds,delay=0,mobile=false,smooth=false){
+    const retain=Math.max(mobile||smooth?30:90,seconds)+Math.max(0,delay)+20;
+    return {retain,forward:Math.max(30,seconds+Math.max(0,delay)+10),bytes:(mobile||smooth?32:64)*1024*1024};
   }
   function pending(mse){
     let bytes=0,count=0;
@@ -24,7 +24,8 @@
     };
   }
   function configure(channel){
-    const key=channel.media.id==='videoB'?'b':'a',delay=getDelays()[key],p=policy(window.replay?.seconds()||0,delay,Boolean(window.mobileNative));
+    const key=channel.media.id==='videoB'?'b':'a',hold=typeof paused!=='undefined'&&paused&&!window.replay?.active?Math.min(90,Math.max(0,(performance.now()-pauseStarted)/1000)):0;
+    const delay=getDelays()[key]+hold,p=policy(window.replay?.seconds()||0,delay,Boolean(window.mobileNative),window.playbackPerformance?.smooth());
     if(channel.engine instanceof Hls)Object.assign(channel.engine.config,{backBufferLength:p.retain,maxBufferLength:p.forward,maxMaxBufferLength:p.forward,maxBufferSize:p.bytes});
     else {const config=channel.engine?._player_engine?._mse_controller?._config;if(config){config.autoCleanupMaxBackwardDuration=p.retain;config.autoCleanupMinBackwardDuration=p.retain-10;}}
     return p;

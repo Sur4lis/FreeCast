@@ -2,6 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 function fixture({sourceEnabled=true,muted=false}={}){
  const elements=new Map(),$=id=>{if(!elements.has(id))elements.set(id,{value:id==='volume'?'80':'50',events:{},addEventListener(name,fn){this.events[name]=fn;}});return elements.get(id);};
  const c={$,running:true,paused:false,demo:false,generation:1,time:0,performance:{now:()=>c.time},Sync:require('../browser-extension/ui/sync.js'),getDelays:()=>({a:10,b:10}),clamp:(x,a,b)=>Math.min(b,Math.max(a,x)),channels:{a:{edge:()=>c.time/1000+20},b:{edge:()=>c.time/1000+20}},window:{live:{vocalRelease:()=>c.releases++,vocalInit:async()=>({realtime:true,delay:7})}},mix:{audioA:true,audioB:sourceEnabled,muted},releases:0,save(){},updateOffset(){},AudioMirror:class{},document:{createElement:()=>({addEventListener(){},pause(){}})}};
+ c.window.addEventListener=()=>{};
  vm.createContext(c);vm.runInContext(fs.readFileSync('browser-extension/ui/vocal.js','utf8')+'\nvocalTemplate.ensureFeed=function(key){this.feeds[key]={pause(){}};};',c);
  vm.runInContext(fs.readFileSync('browser-extension/ui/dual-vocal.js','utf8')+'\nglobalThis.controller=vocal;',c);const v=c.controller;
  const node=()=>({gain:{value:0,cancelScheduledValues(){},setTargetAtTime(value){this.value=value;}}});
@@ -25,6 +26,13 @@ function ticking(f){
  Object.assign(p.feed,{paused:false,seeking:false,readyState:4,currentTime:0,buffered:{length:1,start:()=>0,end:()=>1000}});
  p.media=()=>({currentTime:0,seeking:false,paused:false,pause(){}});p.lastHealthyAt=0;return p;
 }
+
+test('AI feed keeps a fractional adjustment pending while its decoder is seeking',()=>{
+ const f=fixture(),p=ticking(f);p.delay=7;f.c.getDelays=()=>({a:10.1,b:10.1});f.c.channels.b.edge=()=>40;
+ p.feedPlayout={started:true,at:0,target:27,delay:3};p.feed.currentTime=27;p.feed.seeking=true;
+ f.c.Sync.shiftPlayout(p.feedPlayout,.1);p.tick();assert.equal(p.feed.currentTime,27);assert.equal(p.feedPlayout.manualShift,.1);
+ p.feed.seeking=false;p.tick();assert.ok(Math.abs(p.feed.currentTime-26.9)<1e-9);assert.equal(p.feedPlayout.manualShift,0);assert.equal(p.feed.playbackRate,1);
+});
 test('a broken mirror or a silent processing stall restores original audio and exposes recovery controls',()=>{
  for(const closed of [true,false]){const f=fixture(),p=ticking(f);p.mirror.closed=closed;f.c.time=40000;p.tick();
   assert.equal(p.active,false);assert.equal(p.direct.gain.value,1);assert.equal(f.$('aiRetryB').hidden,false);assert.equal(f.$('aiRawB').hidden,false);assert.equal(f.c.resumed,1);

@@ -1,6 +1,6 @@
 // Render the displayed video geometry and comments without capturing controls.
 (()=>{
-  const textures=new WeakMap(),images=new Map();
+  const textures=new WeakMap(),images=new Map();let miniCanvas;
   function image(url){let value=images.get(url);if(value)return value.bitmap;value={};images.set(url,value);fetch(url,{credentials:'omit'}).then(r=>{if(!r.ok)throw Error();return r.blob();}).then(createImageBitmap).then(bitmap=>{if(images.get(url)===value)value.bitmap=bitmap;else bitmap.close();}).catch(()=>{});if(images.size>100){const old=images.keys().next().value;images.get(old)?.bitmap?.close();images.delete(old);}return null;}
   function texture(el,scale=1){let cached=textures.get(el);const style=getComputedStyle(el),signature=el.textContent+el.offsetWidth+el.offsetHeight+document.documentElement.dataset.theme+':'+scale+':'+style.borderTopColor;if(cached?.signature===signature&&performance.now()-cached.at<1500)return cached.canvas;
     const r=el.getBoundingClientRect(),canvas=document.createElement('canvas');canvas.width=Math.ceil(r.width*scale);canvas.height=Math.ceil(r.height*scale);const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.fillStyle=style.backgroundColor;ctx.beginPath();ctx.roundRect(0,0,r.width,r.height,parseFloat(style.borderRadius)||0);ctx.fill();
@@ -23,7 +23,11 @@
     if(mix.showChat){ctx.save();const holes=window.chatAvoidance.rects(dr.width,dr.height);if(!sc.hidden&&sc.children.length)holes.push({x:sr.left-dr.left-4,y:sr.top-dr.top-4,w:sr.width+8,h:sr.height+8});ctx.beginPath();for(const rect of window.chatAvoidance.visible(dr.width,dr.height,holes))ctx.rect(dr.left+rect.x,dr.top+rect.y,rect.w,rect.h);ctx.clip();
       for(const el of overlay.children){const b=el.getBoundingClientRect();ctx.globalAlpha=1-mix.danmakuTransparency/100;ctx.drawImage(texture(el,Math.max(1,w/r.width,h/r.height)),b.left,b.top,b.width,b.height);}ctx.restore();}
     if(!sc.hidden){for(const el of sc.children){const b=el.getBoundingClientRect();ctx.drawImage(texture(el,Math.max(1,w/r.width,h/r.height)),b.left,b.top,b.width,b.height);}}ctx.restore();
-    const mini=$('miniSlot'),panel=$('miniPanel');if(includeMini&&!panel.hidden&&mini.clientWidth>0&&mini.clientHeight>0&&!document.body.classList.contains('mini-minimized')){const mw=w*.26,mh=mw*(mini.clientHeight/Math.max(1,mini.clientWidth)),dest={x:w-mw-16,y:h-Math.min(mh,h*.45)-16,w:mw,h:Math.min(mh,h*.45)};ctx.fillStyle='#08090b';ctx.fillRect(dest.x,dest.y,dest.w,dest.h);drawVideo(ctx,mini.querySelector('video'),dest,mini);}
+    const mini=$('miniSlot'),panel=$('miniPanel');if(includeMini&&!panel.hidden&&mini.clientWidth>0&&mini.clientHeight>0&&!document.body.classList.contains('mini-minimized')){const mw=w*.26,mh=mw*(mini.clientHeight/Math.max(1,mini.clientWidth)),dest={x:w-mw-16,y:h-Math.min(mh,h*.45)-16,w:mw,h:Math.min(mh,h*.45)};
+      miniCanvas ||= document.createElement('canvas');const width=Math.max(1,Math.round(dest.w)),height=Math.max(1,Math.round(dest.h));if(miniCanvas.width!==width)miniCanvas.width=width;if(miniCanvas.height!==height)miniCanvas.height=height;
+      const mc=miniCanvas.getContext('2d',{alpha:false});mc.fillStyle='#08090b';mc.fillRect(0,0,width,height);drawVideo(mc,mini.querySelector('video'),{x:0,y:0,w:width,h:height},mini);
+      ctx.save();ctx.globalAlpha=window.miniWindow?.opacity?.()??1;ctx.drawImage(miniCanvas,dest.x,dest.y,dest.w,dest.h);ctx.restore();
+    }
   }
-  window.recordRenderer={draw,clear(){for(const value of images.values())value.bitmap?.close();images.clear();}};
+  window.recordRenderer={draw,clear(){for(const value of images.values())value.bitmap?.close();images.clear();if(miniCanvas){miniCanvas.width=miniCanvas.height=1;miniCanvas=null;}}};
 })();

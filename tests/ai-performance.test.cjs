@@ -1,0 +1,3 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+test('one slow warmup sample does not reject stable real-time performance',async()=>{const {assess}=await import('../browser-extension/ai/performance.mjs');assert.ok(assess([12000,1800,1600]).realtime);assert.equal(assess([12000,1800,1600]).ms,1800);});
+test('performance gate uses actual incoming block duration and keeps headroom',async()=>{const {assess,BLOCK_INTERVAL_MS}=await import('../browser-extension/ai/performance.mjs');assert.ok(BLOCK_INTERVAL_MS>5200&&BLOCK_INTERVAL_MS<5300);assert.ok(assess([4200,4100,4300]).realtime);assert.equal(assess([5000,5100,4900]).realtime,false);assert.equal(assess([NaN,10,Infinity]).realtime,false);});

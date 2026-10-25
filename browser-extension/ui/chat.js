@@ -61,9 +61,10 @@
         const ws=this.ws=new WebSocket('wss://'+host+'/sub');ws.binaryType='arraybuffer';
         let reason='弹幕连接中断',authenticated=false,lastReply=Date.now(),serial=Promise.resolve(),queued=0;
         const current=()=>!this.closed&&this.ws===ws&&revision===this.revision;
-        const fail=text=>{if(!current())return;reason=text;ws.close();};
+        const fail=text=>{if(!current())return;reason=text;clearTimeout(this.authTimer);clearInterval(this.heartbeat);this.revision++;try{ws.close();}catch{}this.retry(reason);};
+        const send=data=>{if(!current()||ws.readyState!==1)return;try{ws.send(data);}catch{fail('弹幕连接已失效');}};
         this.authTimer=setTimeout(()=>fail('弹幕连接或鉴权超时'),15000);
-        ws.onopen=()=>{if(current())ws.send(packet(7,{uid:config.uid,buvid:config.buvid,roomid:config.room||this.room,protover:2,platform:'web',type:2,key:config.token}));};
+        ws.onopen=()=>send(packet(7,{uid:config.uid,buvid:config.buvid,roomid:config.room||this.room,protover:2,platform:'web',type:2,key:config.token}));
         ws.onmessage=event=>{
           if(!current())return;if(++queued>64){fail('弹幕数据积压，正在换线');return;}
           serial=serial.then(async()=>{
@@ -72,8 +73,8 @@
               if(p.op===8){
                 if(Number(p.body.code)!==0){fail('弹幕鉴权失败（'+String(p.body.code??'未知')+'），请刷新 B 站网页登录状态');return;}
                 authenticated=true;lastReply=Date.now();clearTimeout(this.authTimer);this.emit({type:'status',text:'弹幕已连接'});
-                ws.send(packet(2,'[object Object]'));clearInterval(this.heartbeat);
-                this.heartbeat=setInterval(()=>{if(!current())return;if(Date.now()-lastReply>70000){fail('弹幕心跳超时');return;}if(ws.readyState===1)ws.send(packet(2,'[object Object]'));},25000);
+                send(packet(2,'[object Object]'));if(!current())return;clearInterval(this.heartbeat);
+                this.heartbeat=setInterval(()=>{if(!current())return;if(Date.now()-lastReply>70000){fail('弹幕心跳超时');return;}send(packet(2,'[object Object]'));},25000);
               }
               if(p.op===3||p.op===5){lastReply=Date.now();if(authenticated)this.attempt=0;}
               if(p.op===5){const message=normalize(p.body);if(message)this.emit(message);}
@@ -81,7 +82,7 @@
           }).catch(error=>fail(error.message||'弹幕解码失败')).finally(()=>queued--);
         };
         ws.onerror=()=>fail('弹幕线路无法连接');
-        ws.onclose=event=>{if(!current())return;clearTimeout(this.authTimer);clearInterval(this.heartbeat);this.retry(reason+(event.code&&event.code!==1000?'（'+event.code+'）':''));};
+        ws.onclose=event=>fail(reason+(event.code&&event.code!==1000?'（'+event.code+'）':''));
       }catch(error){if(!this.closed&&revision===this.revision)this.retry(error);}
     }
     retry(error){

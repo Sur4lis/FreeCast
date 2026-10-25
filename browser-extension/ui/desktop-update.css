@@ -42,3 +42,10 @@
 #recordDialog .record-quality{justify-content:space-between;gap:12px}#recordQuality{min-width:120px}#recordQualityHint{display:block;margin:-5px 0 14px}
 :root #recordDialog,:root #blockedDialog{background:var(--settings-panel);color:var(--settings-ink);border-color:var(--settings-line);backdrop-filter:none}
 @media(prefers-reduced-motion:reduce){.control-chevron{transition:none}}
+footer.app-footer{align-items:center;flex-wrap:wrap;gap:12px;color:var(--muted)}
+.app-footer #notice{flex:1;min-width:0}
+.app-footer .author-credit{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-size:12px}
+.app-footer .author-home{display:inline-flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;line-height:20px;color:var(--text);text-decoration:none}
+.app-footer .author-home img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.app-footer .author-home:hover{color:var(--a);text-decoration:underline;text-underline-offset:3px}
+.app-footer .author-home:focus-visible{outline:2px solid var(--a);outline-offset:3px;border-radius:2px}

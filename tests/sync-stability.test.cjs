@@ -1,5 +1,50 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path');
-const {playoutStep,delays}=require(path.resolve(process.env.SYNC_MODULE||'browser-extension/ui/sync.js'));
+const {playoutStep,delays,shiftPlayout}=require(path.resolve(process.env.SYNC_MODULE||'browser-extension/ui/sync.js'));
+
+for(const step of [.1,-.1])test('a manual '+step+' second step is not swallowed by existing clock error',()=>{
+  const state={started:true,at:0,target:27.06,delay:3};
+  shiftPlayout(state,step);
+  const action=playoutStep(state,{now:0,current:27,ranges:[[0,30]],edge:30,delay:3+step,ready:4});
+  assert.ok(Math.abs(action.seek-(27-step))<1e-9);
+  assert.equal(state.manualShift,0);
+});
+
+test('manual steps received during decoding stay queued and share one clock',()=>{
+  const state={started:true,at:0,target:27,delay:3},frame={ranges:[[0,40]],edge:40,ready:4};
+  shiftPlayout(state,.1);
+  assert.equal(playoutStep(state,{...frame,now:0,current:27,delay:3.1}).seek,26.9);
+  shiftPlayout(state,.1);
+  assert.equal(playoutStep(state,{...frame,now:50,current:26.9,delay:3.2,seeking:true}).seek,null);
+  assert.equal(state.manualShift,.1);
+  const next=playoutStep(state,{...frame,now:100,current:26.93,delay:3.2,seeking:false});
+  assert.ok(Math.abs(next.seek-26.9)<1e-9,'keep the original clock rather than adding decode latency');
+  assert.equal(state.manualShift,0);
+});
+
+test('opposite pending steps cancel without a seek',()=>{
+  const state={started:true,at:0,target:27,delay:3};
+  shiftPlayout(state,.1);shiftPlayout(state,-.1);
+  const action=playoutStep(state,{now:100,current:27.1,ranges:[[0,30]],edge:30,delay:3,ready:4});
+  assert.equal(action.seek,null);assert.equal(action.rate,1);assert.equal(state.manualShift,0);
+});
+
+test('manual adjustment settles decode latency without repeated seeks',()=>{
+  const state={started:true,at:0,target:27.06,delay:3},frame={ranges:[[0,40]],edge:40,delay:3.1,ready:4};
+  shiftPlayout(state,.1);
+  let current=playoutStep(state,{...frame,now:0,current:27}).seek,rate=1;
+  for(let n=1;n<=30;n++){
+    if(n>1)current+=.1*rate; // 100 ms decoding stall after the initial seek.
+    const action=playoutStep(state,{...frame,now:n*100,current});
+    assert.equal(action.seek,null);rate=action.rate;
+  }
+  assert.ok(Math.abs(current-29.9)<.012);
+});
+
+test('a manual step while paused preserves the paused position on resume',()=>{
+  const state={started:true,at:0,target:27.06,delay:3};shiftPlayout(state,.1);
+  const resumed=playoutStep(state,{now:10000,current:27,ranges:[[0,40]],edge:40,delay:13.1,ready:4});
+  assert.ok(Math.abs(resumed.seek-26.9)<1e-9);
+});
 
 test('manual alignment adjusts the existing clock despite segment download bursts',()=>{
   const state={};
@@ -41,6 +86,8 @@ test('pause compensation preserves the paused point instead of following a fresh
   const state={};playoutStep(state,{now:0,current:0,ranges:[[0,30]],edge:30,delay:3,ready:4});
   const resumed=playoutStep(state,{now:15000,current:32,ranges:[[0,50]],edge:50,delay:13,ready:4});
   assert.equal(resumed.seek,null);assert.equal(resumed.rate,1);
+  const settling=playoutStep(state,{now:15100,current:32.05,ranges:[[0,50]],edge:50,delay:13,ready:4});
+  assert.equal(settling.seek,null);assert.ok(settling.rate>1,'correct the resume latency even below the usual drift tolerance');
 });
 
 test('an evicted clock target recovers into the playable buffer',()=>{

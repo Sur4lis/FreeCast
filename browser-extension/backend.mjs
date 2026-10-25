@@ -1,5 +1,6 @@
 import { createRoomApi } from './rooms.mjs';
 import { signWbi } from './wbi.mjs';
+import { createFollowingApi } from './live-following.mjs';
 
 const liveUpId = value => /^\d+$/.test(String(value ?? '')) && Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : 0;
 // The live-up feed identifies each room only through its public live link.
@@ -57,7 +58,8 @@ const liveUpQuery = offset => 'web_location=333.1007'
   + (offset === null ? '' : '&offset=' + offset);
 
 // Credentials stay in the browser cookie jar. Never copy SESSDATA into storage or a message.
-export function createBackend({ request = fetch, cookie, cooldownStore, ensureDevice }) {
+export function createBackend({ request = fetch, cookie, cooldownStore, ensureDevice, huyaUid }) {
+  const platformFollowing = createFollowingApi({request, huyaUid});
   const pending = new Set();
   const lastSent = new Map();
   let wbiImages;
@@ -71,7 +73,8 @@ export function createBackend({ request = fetch, cookie, cooldownStore, ensureDe
   const api = async path => (await json('https://api.live.bilibili.com' + path)).data;
   const rooms = createRoomApi(api);
   // The live-up feed only lists followed anchors who are currently streaming.
-  async function liveFollowing() {
+  async function liveFollowing(platform = 'bilibili') {
+    if (platform !== 'bilibili') return platformFollowing(platform);
     const items = new Map();
     let offset = null, truncated = false;
     for (let page = 0; page < 5; page++) {

@@ -28,7 +28,7 @@ function bufferFixture(){
  const buffered={length:1,start:()=>0,end:()=>600},media={id:'videoB',currentTime:597,readyState:4,seeking:false,buffered};
  const mse={_config:{},_sourceBuffers:{video:{buffered},audio:{buffered}},_pendingRemoveRanges:{video:[],audio:[]},_pendingSegments:{audio:[],video:[]},_doRemoveRanges(){this.removes=(this.removes||0)+1;},appendMediaSegment(s){this._pendingSegments[s.type].push(s);}};
  const channel={media,engine:{_player_engine:{_mse_controller:mse}},load(){this.loads=(this.loads||0)+1;}};
- return {api:window.mediaBuffers,channel,mse,Hls,timers,window,setSeconds:v=>seconds=v,setDelay:v=>delay=v};
+ return {api:window.mediaBuffers,channel,mse,Hls,timers,window,setSeconds:v=>seconds=v,setDelay:v=>delay=v,setPause:v=>{scope.paused=v;scope.pauseStarted=-55000;}};
 }
 test('turning replay off prunes already buffered video immediately for FLV and HLS',()=>{
  const {api,channel,mse,Hls,setSeconds}=bufferFixture();assert.equal(api.configure(channel).retain,323);
@@ -50,6 +50,13 @@ test('a blocked FLV decoder recovers its current line at the queue limit',()=>{
  const {api,channel,mse,timers}=bufferFixture();api.attach(channel);
  for(let i=0;i<100;i++)mse.appendMediaSegment({type:'video',data:{byteLength:8*1024*1024}});
  assert.equal(api.pending(mse).bytes,32*1024*1024);assert.equal(timers.length,1);timers[0]();assert.equal(channel.loads,1);
+});
+test('smooth playback reduces idle cache without shortening replay or requested delay',()=>{
+ const {api,channel,Hls,window,setSeconds,setDelay,setPause}=bufferFixture();window.playbackPerformance={smooth:()=>true};channel.engine=new Hls();setSeconds(0);
+ assert.equal(api.configure(channel).retain,53);assert.equal(channel.engine.config.maxBufferSize,32*1024*1024);
+ setSeconds(300);assert.equal(api.configure(channel).retain,323);
+ setDelay(65);assert.equal(api.configure(channel).retain,385);setSeconds(0);assert.equal(api.configure(channel).retain,115);
+ setDelay(3);setPause(true);assert.equal(api.configure(channel).retain,113);setPause(false);assert.equal(api.configure(channel).retain,53);
 });
 test('PCM replay has a byte ceiling and shrinking or disabling the cache releases it',()=>{
  let seconds=300;const pipe={overlap:22050,rate:44100,detachMirror(){},disable(){},fail(){}};

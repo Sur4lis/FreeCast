@@ -28,7 +28,7 @@
       if(window.replay?.active)replay.live();
       if(window.vocal?.pipes[key]?.active)vocal.pipes[key].reset('line-switch');
       paused=false;pauseLag=0;$('pause').textContent='暂停';$('player').classList.remove('paused');
-      clearTimeout(channel.retryTimer);channel.retryTimer=null;channel.refreshed=false;channel.room=room;channel.index=index;
+      clearTimeout(channel.retryTimer);channel.retryTimer=null;channel.room=room;channel.index=index;
       window.superChats?.clear(key);channel.load();notice(key.toUpperCase()+' 路已切换线路，正在缓冲');
     }catch(error){if(current())notice('线路切换失败：'+error.message,true);}finally{if(pending[key]?.revision===revision)pending[key]=null;refresh();}
   }

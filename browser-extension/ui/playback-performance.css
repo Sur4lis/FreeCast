@@ -1,0 +1,7 @@
+/* Limit software-composited decoration without affecting video, crop or comments. */
+.smooth-playback body::before,.smooth-playback body::after,.smooth-playback #blg-ambience{display:none!important}
+.smooth-playback .connection-panel,.smooth-playback .chat-panel,.smooth-playback .sync-panel,.smooth-playback .favorites-bar,.smooth-playback #miniPanel,.smooth-playback dialog,.smooth-playback .player-bottom,.smooth-playback .player-top,.smooth-playback #danmakuActions{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important}
+.smooth-playback .chat-panel{contain:layout style}
+.smooth-playback #chatList{contain:layout style paint}
+.smooth-playback .bullet{filter:none!important;text-shadow:1px 1px 1px #000,-1px -1px 1px #000!important}
+.smooth-playback .blg-recall,.smooth-playback .blg-pinging{animation:none!important}

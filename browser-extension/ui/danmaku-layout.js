@@ -37,15 +37,15 @@
   }
   function add(bullet){
     const g=layout();if(g.width<1||g.rows<1||overlay.children.length>=Math.ceil(60*mix.danmakuDensity/100))return false;
-    const origin=overlay.getBoundingClientRect().left,gap=Math.max(24,mix.danmakuSize)*(100/mix.danmakuDensity),available=[];
+    const origin=overlay.getBoundingClientRect().left,gap=Math.max(24,mix.danmakuSize)*(100/mix.danmakuDensity),children=[...overlay.children];let available;
     const lanes=Array.from({length:Math.max(1,Math.ceil(g.rows*mix.danmakuDensity/100))},(_,i)=>i);
     for(let i=0;i<lanes.length;i++){
       const lane=lanes[(nextLane+i)%lanes.length];
       if(window.danmakuActions?.heldLane()===lane)continue;
-      if([...overlay.children].filter(el=>Number(el.dataset.lane)===lane).every(el=>el.getBoundingClientRect().right-origin<=g.width-gap))available.push(lane);
+      if(children.filter(el=>Number(el.dataset.lane)===lane).every(el=>el.getBoundingClientRect().right-origin<=g.width-gap)){available=lane;break;}
     }
-    if(!available.length)return false; // Busy overlay: show the comment in the sidebar, never delay it into the wrong scene.
-    const lane=available[0];nextLane=(lanes.indexOf(lane)+1)%lanes.length;bullet.dataset.lane=lane;
+    if(available===undefined)return false; // Busy overlay: show the comment in the sidebar, never delay it into the wrong scene.
+    const lane=available;nextLane=(lanes.indexOf(lane)+1)%lanes.length;bullet.dataset.lane=lane;
     bullet.style.top=lane*g.line+'px';bullet.style.height=g.line-4+'px';bullet.style.setProperty('--travel',g.width+'px');
     overlay.append(bullet);const width=Math.ceil(bullet.getBoundingClientRect().width);
     // Reserve the measured box so late image errors/font loads cannot grow into the following comment.

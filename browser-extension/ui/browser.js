@@ -32,7 +32,7 @@ function renderSendTargets(){
   $('chatText').disabled=Boolean(unsupported);$('chatText').maxLength=room?.external?100:40;
   $('sendChat').disabled=sending||Boolean(unsupported)||(!room?.external&&!account.loggedIn);
   $('emoteButton').hidden=Boolean(room?.external);$('emoteButton').disabled=sending||!room||!account.loggedIn;
-  window.emotePicker?.targetChanged();
+  window.emotePicker?.targetChanged?.();
 }
 setInterval(renderSendTargets,1000);
 $('sendTarget').addEventListener('change',()=>{renderSendTargets();$('sendStatus').replaceChildren();});

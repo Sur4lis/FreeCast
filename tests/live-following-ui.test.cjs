@@ -13,13 +13,13 @@ function fixture(){
     showModal(){this.open=true;}
     close(){this.open=false;for(const fn of this.listeners.close||[])fn();}
   }
-  const elements=new Map(),events={},messages=[],reads=[],profiles=[];
+  const elements=new Map(),events={},messages=[],reads=[],profiles=[],logins=[],permissions=[];
   const $=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
   const scope={URL,encodeURIComponent,$,favorites:[],saved:0,renderFavorites(){},save(){scope.saved++;},notice(){},document:{createElement:()=>new Element()},
-    live:{ensureSources:async()=>{},liveFollowing:()=>{const call=deferred();reads.push(call);return call.promise;},getProfile:()=>{const call=deferred();profiles.push(call);return call.promise;}},
+    live:{ensureSources:async inputs=>permissions.push(inputs),authBrowser:async platform=>logins.push(platform),liveFollowing:platform=>{const call=deferred();call.platform=platform;reads.push(call);return call.promise;},getProfile:()=>{const call=deferred();profiles.push(call);return call.promise;}},
     chrome:{runtime:{onMessage:{addListener:fn=>messages.push(fn)}}},addEventListener:(type,fn)=>events[type]=fn};
   scope.window=scope;vm.createContext(scope);vm.runInContext('let followingRequest = '+source,scope);
-  return{scope,$,reads,profiles,messages,events,Element,async open(items=[]){const pending=scope.openFollowing();await turn();reads.at(-1).resolve({items});await pending;}};
+  return{scope,$,reads,profiles,messages,events,Element,logins,permissions,async open(items=[]){const pending=scope.openFollowing();await turn();reads.at(-1).resolve({items});await pending;}};
 }
 const item={id:7734200,inputId:7734200,roomId:7734200,anchorId:50329118,platform:'bilibili',name:'赛事',avatar:'',title:''};
 test('canonical room and anchor identities match only Bilibili favorites',()=>{
@@ -64,4 +64,24 @@ test('two pending imports cannot exceed the 100-favorite limit',async()=>{
   f.profiles[0].resolve({id:item.id,shortId:1000});await first;
   f.profiles[1].resolve({id:888888,shortId:1001});await second;
   assert.equal(f.scope.favorites.length,100);assert.match(f.$('followingStatus').textContent,/最多收藏 100/);
+});
+test('switching platforms ignores the previous feed and requests the selected origin',async()=>{
+  const f=fixture(),old=f.scope.openFollowing();await turn();f.$('followingPlatform').value='douyu';
+  const next=f.$('followingPlatform').listeners.change[0]();await turn();
+  assert.equal(f.reads[1].platform,'douyu');assert.deepEqual(Array.from(f.permissions[1]),['https://www.douyu.com/']);
+  f.reads[0].resolve({items:[item]});await old;assert.equal(f.$('followingList').children.length,0);assert.equal(f.$('followingRefresh').disabled,true);
+  const dy={id:'https://www.douyu.com/7734200',inputId:'https://www.douyu.com/7734200',roomId:'7734200',platform:'douyu',name:'斗鱼主播'};
+  f.reads[1].resolve({items:[dy]});await next;assert.equal(f.$('followingList').children.length,1);
+  f.scope.favorites=[item];await f.scope.importFollowingItem(dy,new f.Element());
+  assert.equal(f.scope.favorites.length,2);assert.equal(f.scope.favorites[1].platform,'douyu');assert.equal(f.profiles.length,0);
+});
+test('external favorites match canonical IDs or aliases only within their own platform',()=>{
+  const f=fixture(),hy={id:'https://www.huya.com/55',roomId:'55',platform:'huya',aliases:['https://www.huya.com/example'],anchorId:'999'};
+  for(const favorite of [{id:'https://m.huya.com/55'},{id:'https://www.huya.com/example'}, {id:'https://www.huya.com/other',anchorId:'999'}]){f.scope.favorites=[favorite];assert.ok(f.scope.followingOwned(hy));}
+  for(const favorite of [{id:'https://www.douyu.com/55',roomId:'55',anchorId:'999'},{id:55}]){f.scope.favorites=[favorite];assert.equal(f.scope.followingOwned(hy),undefined);}
+});
+test('login targets the selected platform and clears stale account data',async()=>{
+  const f=fixture();await f.open([item]);f.$('followingPlatform').value='huya';
+  await f.$('followingLogin').listeners.click[0]();assert.deepEqual(f.logins,['huya']);assert.equal(f.$('followingList').children.length,0);
+  assert.match(f.$('followingStatus').textContent,/登录完成后/);
 });

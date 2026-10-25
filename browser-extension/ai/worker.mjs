@@ -3,6 +3,7 @@ import {Spectral,LENGTH,TRIM,CORE,F,T} from './dsp.mjs';
 import {suppressResidual} from './residual.mjs';
 import {selectStem} from './stems.mjs';
 import {assess,REALTIME_BUDGET_MS} from './performance.mjs';
+import {requestHardwareGPU,gpuHelp} from './gpu-device.mjs';
 
 let session,spectral,provider,device='',passes=2,slowBlocks=0;
 const profile=()=>passes===2?'双次增强':'兼容推理';
@@ -34,39 +35,37 @@ async function process(left,right,mode='game',stem='instrumental'){
   }finally{for(const tensor of tensors)tensor.dispose();}
 }
 async function init(forceCpu=false,performanceMode='auto',streams=1){
+  const selected=forceCpu?null:await requestHardwareGPU(navigator.gpu,navigator.userAgent);
+  device=selected?.device||'';
   const config=await(await fetch(new URL('../models/model.json',import.meta.url))).json();
   const bytes=await(await fetch(new URL('../models/'+config.file,import.meta.url))).arrayBuffer();
   const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');
   if(hash!==config.sha256)throw Error('模型校验失败，请重新解压插件');
   spectral=new Spectral();
   const options={executionMode:'sequential',graphOptimizationLevel:'all',logSeverityLevel:3};
-  passes=performanceMode==='compatible'?1:2;slowBlocks=0;
+  passes=forceCpu||performanceMode==='compatible'?1:2;slowBlocks=0;
   // Non-silent, deterministic audio exercises the complete path; initial shader compilation is excluded.
   const probe=Float32Array.from({length:LENGTH},(_,i)=>.08*Math.sin(2*Math.PI*220*i/44100)+.025*Math.sin(2*Math.PI*731*i/44100));
   if(forceCpu){
-    // Diagnostic only. A measured single-thread CPU block takes longer than real time.
     session=await ort.InferenceSession.create(bytes,{...options,executionProviders:['wasm']});provider='WASM CPU';
     await process(probe,probe);
   }else{
   try{
-    if(!navigator.gpu)throw Error('WebGPU 不可用');
-    const adapter=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});
-    if(!adapter||adapter.info?.isFallbackAdapter)throw Error('未检测到硬件 WebGPU');
-    device=[adapter.info?.vendor,adapter.info?.description||adapter.info?.architecture].filter(Boolean).join(' ').slice(0,160);
-    ort.env.webgpu.adapter=adapter;
+    ort.env.webgpu.adapter=selected.adapter;
     session=await ort.InferenceSession.create(bytes,{...options,executionProviders:['webgpu']});provider='WebGPU GPU';
     await process(probe,probe); // Compile kernels before collecting steady-state timings.
   }catch(error){
     if(session){try{await session.release();}catch{}session=null;}
-    throw Error('无法启用 GPU 人声处理，请开启浏览器图形加速并更新显卡驱动。'+(error.message||''));
+    const failure=Error('已检测到 GPU，但人声处理初始化失败。'+gpuHelp(navigator.userAgent)+' '+String(error.message||error).slice(0,240));failure.code='WEBGPU_INIT_FAILED';failure.gpu=selected.diagnostics;throw failure;
   }
   }
+  // Diagnostic-only: the UI never automatically falls back to CPU inference.
   if(forceCpu){const result=await process(probe,probe);return{provider,device,profile:profile(),passes,blockMs:result.ms,delay:14,ready:true,realtime:false};}
   async function benchmark(){const samples=[];for(let i=0;i<3;i++)samples.push((await process(probe,probe)).ms);return{...assess(samples.map(ms=>ms*Math.max(1,Math.min(2,streams)))),samples};}
   let result=await benchmark();
   if(!result.realtime&&passes===2){passes=1;await process(probe,probe);result=await benchmark();}
   if(!result.realtime)throw Error('GPU 实测仍跟不上直播（'+(device||'WebGPU')+'，兼容推理 '+Math.round(result.ms)+' ms/块）。请确认浏览器使用独立显卡、开启图形加速并关闭节能模式');
-  return {provider,device,profile:profile(),passes,blockMs:result.ms,benchmarkMs:result.samples,delay:result.delay,ready:true,realtime:true};
+  return {provider,device,gpu:selected.diagnostics,profile:profile(),passes,blockMs:result.ms,benchmarkMs:result.samples,delay:result.delay,ready:true,realtime:true};
 }
 let busy=false;
 self.onmessage=async({data:message})=>{
@@ -78,6 +77,6 @@ self.onmessage=async({data:message})=>{
       slowBlocks=result.ms*Math.max(1,Math.min(2,message.streams||1))>REALTIME_BUDGET_MS?slowBlocks+1:0;
       if(passes===2&&slowBlocks>=2){passes=1;slowBlocks=0;result.nextProfile=profile();}
       self.postMessage({id:message.id,...result},[result.left.buffer,result.right.buffer]);}
-  }catch(error){self.postMessage({id:message.id,error:error.message||String(error)});}
+  }catch(error){self.postMessage({id:message.id,error:error.message||String(error),code:error.code,gpu:error.gpu});}
   finally{busy=false;}
 };

@@ -4,7 +4,16 @@
 #superChatOverlay{pointer-events:auto;touch-action:none;cursor:move}#superChatOverlay.sc-position-editing{outline:2px dashed #9ae3ff;outline-offset:3px;overflow:visible}.sc-position-actions{display:flex;gap:6px}.sc-position-actions button{font-size:11px}
 .sc-position-preview{position:absolute;z-index:15;display:grid;place-items:center;width:240px;height:80px;max-width:70%;border:2px dashed #89deff;border-radius:17px;background:#183747e6;color:#fff;font-size:12px;cursor:move;touch-action:none}.sc-position-preview[hidden]{display:none}
 #miniPanel #miniTools{padding:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--panel);color:var(--text);font-size:11px;flex-shrink:0}#miniPanel #miniTools[hidden]{display:none}#miniTools label{display:flex;align-items:center;gap:6px}#miniTools input{width:100px}#miniTools small{width:100%;color:var(--muted)}#miniTools button{font-size:11px;padding:4px 6px}
-#miniPanel.mini-cropping #miniSlot{cursor:grab;touch-action:none}#miniPanel.mini-cropping.moving #miniSlot{cursor:grabbing}
+#miniPanel{position:relative}
+#miniPanel.mini-translucent{background:transparent!important}
+#miniPanel.mini-translucent .mini-heading{background:var(--panel)}
+#miniPanel #miniSlot{opacity:var(--mini-opacity,1)}
+#miniPanel.mini-cropping #miniSlot{cursor:grab;touch-action:none;opacity:1}#miniPanel.mini-cropping.moving #miniSlot{cursor:grabbing}
+#miniOpacityControls{position:absolute;right:8px;z-index:20;width:min(210px,calc(100% - 16px));box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);box-shadow:0 6px 20px #0003}
+#miniOpacityControls[hidden]{display:none}
+#miniOpacityControls label{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:8px}
+#miniOpacityControls output{color:var(--a);font-variant-numeric:tabular-nums}
+#miniOpacityControls input{display:block;width:100%;margin:0;accent-color:var(--a)}
 #miniPanel.mini-clean{border:0!important;border-radius:8px!important;background:transparent!important;box-shadow:none!important;cursor:move;touch-action:none}#miniPanel.mini-clean .mini-heading,#miniPanel.mini-clean .mini-timeline,#miniPanel.mini-clean #miniTools{display:none!important}
 #miniPanel.mini-clean #miniSlot{border-radius:inherit}#miniPanel #restoreMiniUI{position:absolute;top:5px;right:5px;z-index:12;font-size:10px;padding:4px 7px;border-radius:7px;background:#141b24db;color:#fff;border:1px solid #ffffff55;opacity:0;transition:opacity .2s}#restoreMiniUI[hidden]{display:none!important}#miniPanel:hover #restoreMiniUI,#miniPanel:focus-within #restoreMiniUI{opacity:1}
 #miniPanel .mini-resize{z-index:13}#miniPanel.mini-cropping #miniSlot video{pointer-events:none}

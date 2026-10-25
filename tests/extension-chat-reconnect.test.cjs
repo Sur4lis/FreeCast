@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-function harness(){
+function harness({hangingClose=false}={}){
  const timers=new Map(),intervals=new Map(),sockets=[],events=[];let serial=0,calls=0,now=0;
- class Socket{constructor(url){this.url=url;this.readyState=0;sockets.push(this);}send(bytes){this.sent??=[];this.sent.push(bytes);}close(){if(this.readyState===3)return;this.readyState=3;this.onclose?.({code:1000});}open(){this.readyState=1;this.onopen();}}
+ class Socket{constructor(url){this.url=url;this.readyState=0;sockets.push(this);}send(bytes){this.sent??=[];this.sent.push(bytes);}close(){if(this.readyState===3)return;if(hangingClose){this.readyState=2;return;}this.readyState=3;this.onclose?.({code:1000});}open(){this.readyState=1;this.onopen();}}
  const scope={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,Blob,DecompressionStream,URL,WebSocket:Socket,Date:{now:()=>now},setTimeout:(fn,ms)=>{timers.set(++serial,{fn,ms});return serial},clearTimeout:id=>timers.delete(id),setInterval:(fn,ms)=>{intervals.set(++serial,{fn,ms});return serial},clearInterval:id=>intervals.delete(id)};
  vm.runInNewContext(fs.readFileSync('browser-extension/ui/chat.js','utf8'),scope);const {BrowserChat,ChatProtocol}=scope.window;
  const chat=new BrowserChat(6,async()=>{calls++;return{hosts:['one.chat.bilibili.com:2245','two.chat.bilibili.com'],token:'token-'+calls,room:7734200,uid:1,buvid:'device'}},e=>events.push(e));
@@ -17,6 +17,12 @@ test('stale callbacks after stop cannot emit messages or schedule reconnects',as
 });
 test('dead heartbeat reconnects rather than reporting connected indefinitely',async()=>{
  const h=harness();await h.chat.start();const ws=h.sockets[0];ws.open();await h.message(ws,8,{code:0});h.setNow(71000);[...h.intervals.values()][0].fn();assert.match(h.events.at(-1).text,/心跳超时/);h.chat.stop();
+});
+test('a stalled close handshake does not prevent heartbeat recovery or double retry on late close',async()=>{
+ const h=harness({hangingClose:true});await h.chat.start();const ws=h.sockets[0];ws.open();await h.message(ws,8,{code:0});
+ const lateClose=ws.onclose;h.setNow(71000);[...h.intervals.values()][0].fn();
+ assert.equal(h.timers.size,1);assert.match(h.events.at(-1).text,/心跳超时.*秒后重试/);
+ await [...h.timers.values()][0].fn();assert.equal(h.sockets.length,2);const revision=h.chat.revision;lateClose({code:1006});assert.equal(h.chat.revision,revision);h.chat.stop();
 });
 for(const error of [Object.assign(Error('permission denied'),{code:'BILIBILI_PERMISSION'}),Error('No host permissions for cookies at url: "svghttps://live.bilibili.com/"'),Error('B 站网站访问权限不足')])test('permission failure waits for explicit authorization: '+error.message,async()=>{
  const h=harness(),success=h.chat.config;h.chat.config=async()=>{throw error;};await h.chat.start();

@@ -50,7 +50,13 @@ async function sourceProfile(input) {
   return cached?.profile || {id:src.input,inputId:src.input,external:true,pendingProfile:true,platform:src.platform,name:platformNames[src.platform] + ' · ' + src.url.pathname.slice(1,45),title:platformNames[src.platform] + '直播',avatar:''};
 }
 const {cookie,ensureDevice}=createBilibiliSession({cookies:chrome.cookies,permissions:chrome.permissions});
-const backend = createBackend({ cookie, ensureDevice, cooldownStore: {
+const backend = createBackend({ cookie, ensureDevice, huyaUid: async () => {
+  for (const name of ['udb_uid', 'yyuid']) {
+    const value = (await chrome.cookies.get({url:'https://www.huya.com/', name}))?.value;
+    if (/^[1-9]\d{0,19}$/.test(value || '')) return value;
+  }
+  return '';
+}, cooldownStore: {
   get: async () => (await chrome.storage.session.get('lastDanmakuAt')).lastDanmakuAt || 0,
   set: value => chrome.storage.session.set({lastDanmakuAt:value})
 }});
@@ -87,7 +93,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
         return {hasSession:cookies.some(value=>Boolean(value?.value))};
       }
       case 'profile': return sourceProfile(message.room);
-      case 'liveFollowing': return backend.liveFollowing();
+      case 'liveFollowing': return backend.liveFollowing(message.platform);
       case 'roomStats': return roomStats(message.room);
       case 'resolve': return resolveSource(message.room,message.quality,message.preview===true,message.line);
       case 'prepareSources': {
@@ -112,7 +118,12 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
         return platformSender.send(message.room,message.text,sender.tab?.id);
       }
       case 'showSendPage': return platformSender.reveal(sender.tab?.id,message.tabId);
-      case 'login': await chrome.tabs.create({url:'https://www.bilibili.com/'});return true;
+      case 'login': {
+        const urls = {bilibili:'https://www.bilibili.com/', douyu:'https://www.douyu.com/directory/myFollow', huya:'https://www.huya.com/myfollow'};
+        const url = urls[message.platform || 'bilibili'];
+        if (!url) throw Error('不支持的登录平台');
+        await chrome.tabs.create({url}); return true;
+      }
       default: throw new Error('不支持的请求');
     }
   })().then(value=>respond({ok:true,value}),error=>respond({ok:false,error:error.message||'请求失败',errorCode:error.code}));
@@ -120,5 +131,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
 });
 chrome.cookies.onChanged.addListener(({cookie:changed})=>{
   if(['SESSDATA','DedeUserID','bili_jct'].includes(changed.name) && /(^|\.)bilibili\.com$/.test(changed.domain)) chrome.runtime.sendMessage({type:'accountChanged'}).catch(()=>{});
+  if(['acf_uid','acf_auth','acf_stk','acf_ltk'].includes(changed.name) && /(^|\.)douyu\.com$/.test(changed.domain)) chrome.runtime.sendMessage({type:'accountChanged',platform:'douyu'}).catch(()=>{});
+  if(['udb_uid','yyuid'].includes(changed.name) && /(^|\.)huya\.com$/.test(changed.domain)) chrome.runtime.sendMessage({type:'accountChanged',platform:'huya'}).catch(()=>{});
 });
 

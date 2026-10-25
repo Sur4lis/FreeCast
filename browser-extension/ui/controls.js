@@ -129,6 +129,8 @@ $('favoriteForm').addEventListener('submit', async event => {
   finally { if (request === favoriteRequest) $('favoriteSubmit').disabled = false; }
 });
 let followingRequest = 0, followingItems = [], followingTruncated = false;
+const followingPlatforms = {bilibili: {name: 'B 站', source: '1'}, douyu: {name: '斗鱼', source: 'https://www.douyu.com/'}, huya: {name: '虎牙', source: 'https://www.huya.com/'}};
+function followingPlatform() { return Object.prototype.hasOwnProperty.call(followingPlatforms, $('followingPlatform').value) ? $('followingPlatform').value : 'bilibili'; }
 const followingAvatarFallback = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="#35412e"/><text x="20" y="27" text-anchor="middle" fill="#c8f583" font-size="18">UP</text></svg>');
 function followingRoomId(value) {
   const input = String(value ?? '').trim();
@@ -138,7 +140,32 @@ function followingRoomId(value) {
 function isBiliFavorite(favorite) {
   return (!favorite.platform || favorite.platform === 'bilibili') && followingRoomId(favorite.inputId || favorite.id) > 0;
 }
+function followingIdentity(value, platform) {
+  const input = String(value ?? '').trim();
+  if (/^[a-z\d_-]+$/i.test(input)) return input;
+  try {
+    const url = new URL(input), domain = platform + '.com';
+    return /^https?:$/.test(url.protocol) && !url.username && !url.password &&
+      (url.hostname === domain || url.hostname.endsWith('.' + domain)) && /^\/[a-z\d_-]+\/?$/i.test(url.pathname) ? url.pathname.replaceAll('/', '') : '';
+  } catch { return ''; }
+}
+function followingFavoritePlatform(favorite) {
+  if (favorite.platform) return favorite.platform;
+  if (isBiliFavorite(favorite)) return 'bilibili';
+  for (const platform of ['douyu', 'huya']) {
+    const input = String(favorite.inputId || favorite.id);
+    if (input.includes('://') && followingIdentity(input, platform)) return platform;
+  }
+  return '';
+}
 function followingOwned(item) {
+  if (item.platform && item.platform !== 'bilibili') {
+    const platform = item.platform;
+    const ids = [item.id, item.inputId, item.roomId, ...(item.aliases || [])].map(value => followingIdentity(value, platform)).filter(Boolean);
+    return favorites.find(f => followingFavoritePlatform(f) === platform && (
+      [f.id, f.inputId, f.roomId, ...(f.aliases || [])].some(value => ids.includes(followingIdentity(value, platform))) ||
+      item.anchorId && f.anchorId && String(f.anchorId) === String(item.anchorId)));
+  }
   const ids = [item.id, item.roomId, item.inputId, item.shortId].map(followingRoomId).filter(Boolean);
   return favorites.find(f => isBiliFavorite(f) && (
     [f.id, f.inputId, f.roomId, f.shortId].some(value => ids.includes(followingRoomId(value))) ||
@@ -156,7 +183,7 @@ function clearFollowing() {
 function refreshFollowingStatus() {
   const pending = followingItems.filter(item => !followingOwned(item)).length;
   $('followingStatus').textContent = !followingItems.length
-    ? '没有找到正在直播的关注 UP 主'
+    ? '没有找到正在直播的关注主播'
     : `${followingTruncated ? '已读取前' : '正在直播'} ${followingItems.length} 位${pending ? '，点击右侧按钮收藏' : '，已全部收藏'}${followingTruncated ? '；关注较多，仅显示部分结果' : ''}${favorites.length >= 100 ? '；收藏已达上限 100' : ''}`;
 }
 async function importFollowingItem(item, button) {
@@ -166,14 +193,14 @@ async function importFollowingItem(item, button) {
   button.disabled = true; button.textContent = '正在导入';
   try {
     // Older favorites may contain only a short room number or a room URL.
-    if (!followingOwned(item) && favorites.some(f => isBiliFavorite(f) && !f.roomId)) {
+    if ((!item.platform || item.platform === 'bilibili') && !followingOwned(item) && favorites.some(f => isBiliFavorite(f) && !f.roomId)) {
       const profile = await window.live.getProfile(item.id);
       if (!current()) return;
       if (Number(profile.id) === Number(item.id)) Object.assign(item, {shortId: profile.shortId, anchorId: profile.anchorId || item.anchorId});
     }
     if (!current()) return;
     const owned = followingOwned(item);
-    if (owned) Object.assign(owned, {roomId: item.roomId, anchorId: item.anchorId, platform: 'bilibili'});
+    if (owned) Object.assign(owned, {roomId: item.roomId, anchorId: item.anchorId, platform: item.platform || 'bilibili'});
     else {
       if (favorites.length >= 100) throw Error('最多收藏 100 个 UP 主');
       favorites.push({...item});
@@ -208,13 +235,14 @@ function renderFollowing() {
 }
 async function openFollowing() {
   const request = ++followingRequest;
+  const platform = followingPlatform(), info = followingPlatforms[platform];
   followingItems = []; followingTruncated = false; $('followingList').replaceChildren();
-  $('followingStatus').textContent = '正在读取 B 站关注列表…'; followingBusy(true);
+  $('followingStatus').textContent = '正在读取' + info.name + '关注列表…'; followingBusy(true);
   if (!$('followingDialog').open) $('followingDialog').showModal();
   try {
-    await window.live.ensureSources(['1']);
+    await window.live.ensureSources([info.source]);
     if (request !== followingRequest || !$('followingDialog').open) return;
-    const result = await window.live.liveFollowing();
+    const result = await window.live.liveFollowing(platform);
     if (request !== followingRequest || !$('followingDialog').open) return;
     followingItems = Array.isArray(result?.items) ? result.items : [];
     followingTruncated = result?.truncated === true;
@@ -227,6 +255,12 @@ async function openFollowing() {
 $('importFollowing').addEventListener('click', openFollowing);
 $('importFollowing').hidden = typeof window.live.liveFollowing !== 'function';
 $('followingRefresh').addEventListener('click', openFollowing);
+$('followingPlatform').addEventListener('change', openFollowing);
+$('followingLogin').addEventListener('click', async () => {
+  clearFollowing(); $('followingStatus').textContent = '登录完成后，点击重新读取';
+  try { await window.live.authBrowser(followingPlatform()); }
+  catch (error) { $('followingStatus').textContent = String(error.message || error); }
+});
 $('followingCancel').addEventListener('click', () => { clearFollowing(); $('followingDialog').close(); });
 $('followingDialog').addEventListener('cancel', clearFollowing);
 $('followingDialog').addEventListener('close', () => { if (!$('followingDialog').open) clearFollowing(); });
@@ -234,7 +268,7 @@ function followingAccountChanged() {
   if (!$('followingDialog').open) return;
   clearFollowing(); $('followingStatus').textContent = '账号已变更，请点击重新读取';
 }
-chrome.runtime.onMessage.addListener(message => { if (message.type === 'accountChanged') followingAccountChanged(); });
+chrome.runtime.onMessage.addListener(message => { if (message.type === 'accountChanged' && (!message.platform || message.platform === followingPlatform())) followingAccountChanged(); });
 window.addEventListener('freecast-account-changed', followingAccountChanged);
 window.addEventListener('beforeunload', save);
 applyMix(); renderFavorites(); selectSource(activeSource); updateView();

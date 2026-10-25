@@ -24,13 +24,14 @@ const vocalTemplate = {
     const revision=++this.enableRevision,token=generation;this.loading=true;this.error='';vocal.controls();
     try{
       if(!running||!this.mirror||this.mirror.closed)throw Error('音轨尚未就绪，请连接直播后重试');
-      this.mirror.resume?.();
       await vocal.graph();await this.ctx.resume();
       if(revision!==this.enableRevision||token!==generation||!running)return;
       const info=await window.live.vocalInit({performanceMode:$('filterPerformance').value,streams:vocal.selectedCount()});
       if(revision!==this.enableRevision)return;
       if(token!==generation||!running)throw Error('直播已切换');
-      if(!info.realtime)throw Error('浏览器 GPU 无法实时处理');
+      if(!info.realtime)throw Error('当前设备无法实时处理');
+      if(!this.mirror||this.mirror.closed)throw Error('音轨已中断，请重试');
+      this.mirror.resume?.();
       this.delay=(info.delay||8)+(vocal.selectedCount()>1?6:0);this.provider=info.provider;this.device=info.device;this.profile=info.profile;
       this.active=true;this.feedStarted=false;this.feedPlayout={};this.lastHealthyAt=performance.now();
       this.reset();applyMix();updateOffset();save();
@@ -117,7 +118,7 @@ const vocalTemplate = {
     const edge=channels[this.sourceKey]?.edge(performance.now());
     const requested=getDelays()[this.sourceKey]-this.delay;
     if(performance.now()-(this.lastHealthyAt||0)>Math.max(30000,(this.delay+Math.max(0,requested)+20)*1000)){this.fail(Error('AI 音轨长时间未输出，请重试 AI 或切换线路'));return;}
-    const action=Sync.playoutStep(this.feedPlayout ||= {},{now:performance.now(),current:this.feed.currentTime,ranges,edge,delay:requested,ready:this.feed.readyState});
+    const action=Sync.playoutStep(this.feedPlayout ||= {},{now:performance.now(),current:this.feed.currentTime,ranges,edge,delay:requested,ready:this.feed.readyState,seeking:this.feed.seeking});
     if(action.wait){this.feed.pause();video.pause();return;}
     this.feedRequest=requested;this.feedStarted=true;
     if(action.seek!==null&&!this.feed.seeking){this.seekReason='playout-clock';this.feed.currentTime=action.seek;}

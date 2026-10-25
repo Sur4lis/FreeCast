@@ -49,13 +49,13 @@
       const adjustment=Number($('chatOffset').value)||0,rows=[];
       for(const k of keys){cursors[k]=channels[k].media.currentTime;if(mix['chat'+k.toUpperCase()])rows.push(...history[k].at(cursors[k],adjustment,mix.scMaxDuration));}
       rows.sort((a,b)=>(a.at-cursors[a.source||'a'])-(b.at-cursors[b.source||'a']));
-      for(const m of [...rows.filter(m=>m.type!=='superchat').slice(-178),...rows.filter(m=>m.type==='superchat').slice(-2)])showMessage(m,true);window.superChats?.tick();
+      showMessages([...rows.filter(m=>m.type!=='superchat').slice(-178),...rows.filter(m=>m.type==='superchat').slice(-2)],true);window.superChats?.tick();
     },
     showChat(){
       const adjustment=Number($('chatOffset').value)||0;
       for(const k of keys){const media=channels[k].media;if(media.paused||media.seeking)continue;const time=media.currentTime,from=cursors[k]??time;cursors[k]=time;
         if(time<from-.2){this.restoreChat();return;}
-        if(mix['chat'+k.toUpperCase()]){const messages=history[k].since(from,time,adjustment);messages.filter(m=>m.type==='superchat').forEach(m=>showMessage(m));messages.filter(m=>m.type!=='superchat').slice(-12).forEach(m=>showMessage(m));}
+        if(mix['chat'+k.toUpperCase()]){const messages=history[k].since(from,time,adjustment);showMessages([...messages.filter(m=>m.type==='superchat'),...messages.filter(m=>m.type!=='superchat').slice(-12)]);}
       }
     },
     live(){
@@ -74,23 +74,23 @@
       if(paused){for(const k of keys)channels[k].media.pause();window.vocal?.replayTick(this.rate,true);this.render();return true;}
       const a=channels.a.media;
       const waiting=keys.some(k=>{const c=channels[k];return c.error||c.media.readyState<3||c.media.seeking;});
-      if(waiting){a.pause();b.pause();window.vocal?.replayTick(this.rate,true);$('playStatus').textContent='回看缓冲中…';this.render();return true;}
+      if(waiting){a.pause();b.pause();window.vocal?.replayTick(this.rate,true);setText('playStatus','回看缓冲中…');this.render();return true;}
       const expected=anchor.a+b.currentTime-anchor.b,difference=expected-a.currentTime;
       if(Math.abs(difference)>.4)a.currentTime=expected;
       a.playbackRate=this.rate*clamp(1+difference*.08,.97,1.03);b.playbackRate=this.rate;
       for(const media of [a,b])if(media.paused)media.play().catch(()=>notice('请点击继续播放',true));
       window.vocal?.replayTick(this.rate,false);this.showChat();window.superChats?.tick();
       if(lag<=.3){this.live();return false;}
-      $('playStatus').textContent=`回看 · ${this.rate}× · 落后 ${clock(lag)}`;this.render();return true;
+      setText('playStatus',`回看 · ${this.rate}× · 落后 ${clock(lag)}`);this.render();return true;
     },
     render(force=false){
       const now=performance.now();if(!force&&now-lastUI<250)return;lastUI=now;
       const allowed=this.available(),max=allowed.length?Math.max(...allowed.map(x=>x[1])):0,target=this.targets(),lag=this.active&&target.b!==null?Math.max(0,target.b-(channels.b?.media.currentTime||0)):0;
-      select.value=String(seconds);slider.disabled=max<.5;slider.min=String(-max);slider.max='0';
+      select.value=String(seconds);slider.disabled=max<.5;if(slider.min!==String(-max))slider.min=String(-max);if(slider.max!=='0')slider.max='0';
       if(!dragging)slider.value=String(-Math.min(max,lag));
       slider.setAttribute('aria-valuetext',lag?`回看 ${clock(lag)} 前`:'直播位置');
-      $('replayRange').textContent=seconds?`可回看 ${clock(max)}`:'回看已关闭';
-      if(!dragging)$('replayTime').textContent=this.active?`−${clock(lag)}`:'直播';
+      setText('replayRange',seconds?`可回看 ${clock(max)}`:'回看已关闭');
+      if(!dragging)setText('replayTime',this.active?`−${clock(lag)}`:'直播');
       $('replaySpeed').disabled=!this.active;$('replaySpeed').value=String(this.rate);$('returnLive').disabled=!running||(!this.active&&!paused&&pauseLag===0);
       $('replaySpeed').title=window.vocal?.active?'AI 处理声音在倍速回看时会随速度变调':'仅在回看时调整速度，追上后恢复正常直播';
       $('replayBack').disabled=max<.5;

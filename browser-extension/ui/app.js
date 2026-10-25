@@ -1,4 +1,5 @@
 const $ = id => document.getElementById(id);
+function setText(id,value){const node=$(id);if(node.textContent!==value)node.textContent=value;}
 const { clamp, delays, targetTime, correction, ChatQueue } = Sync;
 const queue = new ChatQueue();
 const queueB = new ChatQueue();
@@ -61,7 +62,15 @@ if (!localStorage.getItem('goat-default-favorites-v1')) {
 function getDelays() { const d = delays(offset, Number($('base').value)), extra = window.vocal?.active && !demo ? window.vocal.delay + window.vocal.bufferPadding() : 0; return { a: d.a + pauseLag + extra, b: d.b + pauseLag + extra }; }
 function updateOffset(value = offset) {
   const replayLag=window.replay?.active?window.replay.currentLag():null;
+  const previous=delays(offset,0);
   offset = Math.round(clamp(Number(value) || 0, -60, 60) * 10) / 10;
+  if(replayLag===null){
+    const next=delays(offset,0);
+    for(const key of ['a','b']){
+      const pipe=window.vocal?.pipes?.[key];
+      Sync.shiftPlayout(pipe?.active?pipe.feedPlayout:channels[key]?.playout,next[key]-previous[key]);
+    }
+  }
   $('offset').value = offset;
   $('offsetValue').value = offset.toFixed(1);
   save();
@@ -69,18 +78,23 @@ function updateOffset(value = offset) {
 }
 class Channel {
   constructor(media, room, name, token) {
-    this.media = media; this.room = room; this.name = name; this.token = token; this.index = 0; this.latest = null; this.edgeAt = 0; this.closed = false; this.error = ''; this.lastProgress = performance.now();
+    this.media = media; this.room = room; this.name = name; this.token = token; this.index = 0; this.latest = null; this.edgeAt = 0; this.closed = false; this.error = ''; this.lastProgress = performance.now(); this.retryAttempts = 0; this.recoveries = 0;
     this.load();
   }
   destroyEngine() { clearTimeout(this.bufferRecovery);this.bufferRecovery=null;window.vocal?.detachMirror(this.media.id === 'videoB' ? 'b' : 'a'); if (this.engine) { this.engine.destroy(); this.engine = null; } this.media.pause(); this.media.removeAttribute('src'); this.media.load(); }
-  load() {
+  load(recovering = false) {
+    if (this.closed) return;
+    clearTimeout(this.retryTimer); this.retryTimer = null; this.refreshing = false; this.recoveryBlocked = false;
+    if (!recovering) { this.retryAttempts = 0; this.recoveryReason = ''; }
+    this.recovering = recovering; this.healthySince = null; this.lastMediaTime = null;
     this.loadRevision=(this.loadRevision||0)+1;
+    const revision = this.loadRevision, current = () => !this.closed && this.loadRevision === revision;
     window.replay?.clearSource(this.name === 'A 音频' ? 'a' : 'b');
     this.destroyEngine(); this.playout = {}; this.latest = null; this.lastProgress = performance.now();
     if (this.name === 'A 音频') queue.clear();
     else queueB.clear();
     const source = this.room.sources[this.index];
-    if (!source) { this.error = `${this.name} 所有线路连接失败，请重新连接`; notice(this.error, true); return; }
+    if (!source) { this.error = `${this.name} 暂无可用线路，正在重新获取`; this.fallback('直播线路暂不可用'); return; }
     this.error = '';
     updateQualityState(this.name === 'A 音频' ? 'A' : 'B', source.quality);
     queueMicrotask(()=>window.streamLines?.refresh());
@@ -88,43 +102,66 @@ class Channel {
       if (source.type === 'flv') {
         if (!mpegts.isSupported()) throw new Error('当前系统不支持 FLV 播放');
         this.engine = mpegts.createPlayer({ type: 'flv', isLive: true, url: source.url, cors:true, withCredentials:Boolean(this.room.external) }, {
-          enableWorker: false, lazyLoad: false, liveBufferLatencyChasing: false, liveSync: false,
+          enableWorker: !this.inlineTransmux, workerPath:new URL('../vendor/mpegts-worker.js',location.href).href,
+          lazyLoad: false, liveBufferLatencyChasing: false, liveSync: false, accurateSeek: true,
           autoCleanupSourceBuffer: true, autoCleanupMaxBackwardDuration: 150, autoCleanupMinBackwardDuration: 120,
           stashInitialSize: 128, fixAudioTimestampGap: true
         });
-        this.engine.on(mpegts.Events.ERROR, () => this.fallback());
+        this.engine.on(mpegts.Events.ERROR, (_type,detail) => {
+          if (!current()) return;
+          if(detail==='WorkerError'&&!this.inlineTransmux){this.inlineTransmux=true;this.load();notice(this.name+' 播放线程不可用，已切换兼容播放');}
+          else this.fallback(String(detail || _type || 'FLV 直播流中断'));
+        });
         this.engine.attachMediaElement(this.media);
         window.mediaBuffers?.attach(this);
         window.replay?.configure(this);
         window.vocal?.attachFLV(this.engine, this.media.id === 'videoB' ? 'b' : 'a');
         this.engine.load();
       } else {
-        this.engine = new Hls({ enableWorker: false, lowLatencyMode: false, backBufferLength: 150,
+        this.engine = new Hls({ enableWorker: true, workerPath:new URL('../vendor/hls-worker.js',location.href).href, lowLatencyMode: false, backBufferLength: 150,
           xhrSetup:xhr=>{xhr.withCredentials=Boolean(this.room.external);},
           maxBufferLength: 120, maxMaxBufferLength: 150, maxBufferSize: 160 * 1000 * 1000,
           liveSyncDuration: 3, liveMaxLatencyDuration: Infinity, maxLiveSyncPlaybackRate: 1 });
-        this.engine.on(Hls.Events.ERROR, (_event, data) => { if (data.fatal) this.fallback(); });
+        this.engine.on(Hls.Events.ERROR, (_event, data) => { if (current() && data.fatal) this.fallback(String(data.details || 'HLS 直播流中断')); });
         window.replay?.configure(this);
         window.vocal?.attachHLS(this.engine, this.media.id === 'videoB' ? 'b' : 'a');
         this.engine.loadSource(source.url); this.engine.attachMedia(this.media);
       }
-    } catch { this.fallback(); }
+    } catch (error) { if (current()) this.fallback(error.message || '播放器初始化失败'); }
   }
-  fallback() {
-    if (this.closed || this.retryTimer) return;
-    const revision=this.loadRevision;
-    notice(`${this.name} 当前线路异常，正在切换备用线路…`);
+  fallback(reason = '直播流中断') {
+    if (this.closed || this.retryTimer || this.refreshing || this.recoveryBlocked) return;
+    const revision=this.loadRevision, current=()=>!this.closed&&this.loadRevision===revision;
+    this.recovering = true;
+    this.recoveryReason = String(reason).replace(/https?:\/\/\S+/gi, '[直播地址已省略]').slice(0, 160);
+    const wait = this.index + 1 < this.room.sources.length ? 500 : Math.min(30000, 1000 * 2 ** Math.min(this.retryAttempts, 5));
+    notice(`${this.name} 连接中断，${wait < 1000 ? '正在切换线路' : Math.ceil(wait / 1000) + ' 秒后自动重连'}…`);
     this.retryTimer = setTimeout(async () => {
       this.retryTimer = null;
-      if (this.closed||this.loadRevision!==revision) return;
+      if (!current()) return;
       this.index++;
-      // URLs can expire. Resolve fresh URLs once after exhausting the original list.
-      if (this.index >= this.room.sources.length && !this.refreshed) {
-        this.refreshed = true;
-        try { const fresh=await window.live.resolveRoom(this.room.id,this.room.requestedQuality,{line:this.room.line});if(this.closed||this.loadRevision!==revision)return;this.room=fresh;this.index=0; } catch { /* load displays failure */ }
+      if (this.index >= this.room.sources.length) {
+        this.refreshing = true; this.retryAttempts++;
+        let failure;
+        try {
+          const fresh=await window.live.resolveRoom(this.room.inputId || this.room.id,this.room.requestedQuality,{line:this.room.line});
+          if (!current()) return;
+          if (!fresh?.sources?.length) throw Error('暂未获取到可播放的直播线路');
+          this.room=fresh;this.index=0;
+        } catch (error) { failure=error; }
+        finally { if (current()) this.refreshing=false; }
+        if (!current()) return;
+        if (failure) {
+          const message=String(failure.message || failure).replace(/https?:\/\/\S+/gi, '[直播地址已省略]').slice(0, 160);
+          this.recoveryBlocked=failure.code==='BILIBILI_PERMISSION'||/\b412\b|No host permissions|网站访问|请允许访问|访问限制/.test(message);
+          this.error=this.name+'：'+message;
+          if (this.recoveryBlocked) { this.recovering=false;notice(this.error+'；请完成平台验证或授权后重新连接',true); }
+          else this.fallback(message);
+          return;
+        }
       }
-      if (!this.closed&&this.loadRevision===revision) this.load();
-    }, 500);
+      if (current()) this.load(true);
+    }, wait);
   }
   sample(now) {
     window.mediaBuffers?.trim(this);
@@ -134,11 +171,20 @@ class Channel {
       const end = ranges[ranges.length - 1][1];
       if (this.latest === null || end > this.latest + 0.01) { this.latest = end; this.edgeAt = now; this.lastProgress = now; }
     }
-    if (now - this.lastProgress > 20000 && !this.error) { this.lastProgress = now; this.fallback(); }
+    const media=this.media, previous=this.lastMediaTime;
+    this.lastMediaTime=media.currentTime;
+    if (!media.paused && !media.seeking && media.readyState>=3 && previous!==null && media.currentTime>previous+.02 && media.currentTime-previous<2) {
+      if (this.recovering && !this.retryTimer && !this.refreshing) { this.recovering=false;this.recoveries++;notice(this.name+' 已恢复播放，请确认音画偏移'); }
+      if (this.healthySince===null) this.healthySince=now;
+      if (now-this.healthySince>30000) this.retryAttempts=0;
+    }
+    let ahead=0;
+    for (const [start,end] of ranges) if (media.currentTime>=start&&media.currentTime<=end) ahead=end-media.currentTime;
+    if (!paused && !window.replay?.active && ahead<2 && now-this.lastProgress>20000 && !this.error) { this.lastProgress=now;this.fallback('直播数据超过 20 秒未更新'); }
     return ranges;
   }
   edge(now) { return this.latest === null ? null : this.latest + Math.min(5, (now - this.edgeAt) / 1000); }
-  stop() { this.closed = true; clearTimeout(this.retryTimer); this.destroyEngine(); }
+  stop() { this.closed = true; this.loadRevision++;clearTimeout(this.retryTimer);this.retryTimer=null;this.refreshing=false;this.recovering=false;this.destroyEngine(); }
 }
 function clearChat() { window.chatRules?.reset(); queue.clear(); queueB.clear(); window.superChats?.clear(); $('chatList').replaceChildren(); $('danmaku').replaceChildren(); }
 function connectionUI() {
@@ -222,6 +268,15 @@ async function connect() {
     if (!retained) $('playStatus').textContent = '连接失败';
   } finally { if (connecting === request) { connecting = null; connectionUI(); } }
 }
+let chatBatch=null;
+function showMessages(messages,historyOnly=false){
+  if(!messages.length)return;
+  const list=$('chatList'),nearBottom=list.scrollHeight-list.scrollTop-list.clientHeight<70;
+  chatBatch=true;
+  try{for(const message of messages)showMessage(message,historyOnly);}
+  finally{chatBatch=null;
+    while(list.children.length>180)list.firstChild.remove();if(nearBottom)list.scrollTop=list.scrollHeight;}
+}
 function showMessage(message, historyOnly = false) {
   if (message.isSelf === undefined) message = {...message, isSelf: window.chatSender?.isOwn(message) === true};
   if(window.chatBlocking?.isBlocked(message)||window.chatRules?.blocked(message))return;
@@ -234,9 +289,10 @@ function showMessage(message, historyOnly = false) {
   row.dataset.source = message.source || 'a';
   window.chatBlocking?.decorate(row,username,message);
   row.append(username); ChatContent.append(row, message);const group=window.chatRules?.track(message,row);
-  const list = $('chatList'), nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 70;
-  $('chatEmpty')?.remove(); list.append(row); while (list.children.length > 180) list.firstChild.remove();
-  if (nearBottom) list.scrollTop = list.scrollHeight;
+  if(chatBatch){$('chatEmpty')?.remove();$('chatList').append(row);}
+  else {const list = $('chatList'), nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 70;
+    $('chatEmpty')?.remove(); list.append(row); while (list.children.length > 180) list.firstChild.remove();
+    if (nearBottom) list.scrollTop = list.scrollHeight;}
   if(!historyOnly)showDanmaku(message,group);
 }
 function showDanmaku(message,group){
@@ -266,11 +322,12 @@ function togglePause() {
   $('pause').textContent = paused ? '继续' : '暂停'; $('player').classList.toggle('paused', paused);
   if (gain) gain.gain.value = 0;
 }
+let lastPlayerUI=0;
 function tick() {
   if (!running) return;
   const now = performance.now(), d = getDelays();
-  const miniMedia = $('miniSlot').querySelector('video');
-  if (miniMedia) $('miniTime').textContent = `播放 ${Math.floor(miniMedia.currentTime / 60)}:${(miniMedia.currentTime % 60).toFixed(1).padStart(4, '0')} · 音画同轴 · 偏移 ${offset.toFixed(1)} s`;
+  if(!document.hidden&&now-lastPlayerUI>=250){lastPlayerUI=now;const miniMedia=$('miniSlot').querySelector('video');
+    if(miniMedia&&!document.body.classList.contains('mini-minimized'))setText('miniTime',`播放 ${Math.floor(miniMedia.currentTime / 60)}:${(miniMedia.currentTime % 60).toFixed(1).padStart(4, '0')} · 音画同轴 · 偏移 ${offset.toFixed(1)} s`);}
 
   window.vocal?.tick();
   if(window.replay?.active){for(const c of Object.values(channels))c.sample(now);if(window.replay.step())return;}
@@ -282,26 +339,26 @@ function tick() {
     if(c.error){buffering=true;continue;}
     if(window.vocal?.pipes[key]?.active){buffering ||= !window.vocal.pipes[key].ready;continue;}
     if(window.vocal?.active&&!window.vocal.pipes[key]?.active&&!window.vocal.ready&&!c.playout.started){buffering=true;continue;}
-    const action=Sync.playoutStep(c.playout,{now,current:media.currentTime,ranges,edge,delay:d[key],ready:media.readyState});
+    const action=Sync.playoutStep(c.playout,{now,current:media.currentTime,ranges,edge,delay:d[key],ready:media.readyState,seeking:media.seeking});
     if(action.wait){media.pause();buffering=true;continue;}
     if(action.seek!==null&&!media.seeking){media.currentTime=action.seek;c.syncSeeks=(c.syncSeeks||0)+1;}
-    media.playbackRate=action.rate;
+    if(media.playbackRate!==action.rate)media.playbackRate=action.rate;
     if(media.paused)media.play().catch(error=>{if(error.name!=='AbortError')notice('请点击继续播放。',true);});
     buffering ||= media.readyState<3;
   }
   window.superChats?.tick();
-  if(paused){$('playStatus').textContent='已暂停 · 两路保持同一观看位置';return;}
+  if(paused){setText('playStatus','已暂停 · 两路保持同一观看位置');return;}
+  const visibleMessages=[];
   for (const key of ['a', 'b']) {
     const media = channels[key].media;
     const chatTime = media.currentTime;
     if (mix['chat' + key.toUpperCase()] && !media.paused && !media.seeking && media.readyState >= 3) {
       const ready=(key === 'a' ? queue : queueB).take(chatTime, Number($('chatOffset').value) || 0);
-      ready.filter(m=>m.type==='superchat').forEach(m=>showMessage(m));
-      ready.filter(m=>m.type!=='superchat').slice(-12).forEach(m=>showMessage(m));
+      visibleMessages.push(...ready.filter(m=>m.type==='superchat'),...ready.filter(m=>m.type!=='superchat').slice(-12));
     }
   }
-  $('playStatus').textContent = buffering ? (window.vocal?.active&&!window.vocal.ready?'AI 正在准备 · 其他直播继续播放':'等待直播数据…') : window.vocal?.active?'AI 处理播放 · 音画已补偿':'播放中 · 偏移保持';
-  if ($('notice').textContent.includes('正在切换备用线路') && !channels.a.retryTimer && !channels.b.retryTimer) notice('备用线路已恢复播放。线路切换后请确认音画偏移。');
+  showMessages(visibleMessages);
+  setText('playStatus',buffering ? (window.vocal?.active&&!window.vocal.ready?'AI 正在准备 · 其他直播继续播放':'等待直播数据…') : window.vocal?.active?'AI 处理播放 · 音画已补偿':'播放中 · 偏移保持');
 }
 $('connect').addEventListener('click', () => connecting ? cancelConnection() : connect());
 
