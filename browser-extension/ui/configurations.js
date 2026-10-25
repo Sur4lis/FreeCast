@@ -11,6 +11,7 @@
       if(typeof p.mix[k]==='boolean'){if(typeof v.mix?.[k]==='boolean')p.mix[k]=v.mix[k];}
     }
     for(const k of ['qualityA','qualityB'])if(Number.isSafeInteger(v.mix?.[k])&&v.mix[k]>=0&&v.mix[k]<=1000000)p.mix[k]=v.mix[k];
+    for(const k of ['danmakuColorA','danmakuColorB'])if(/^#[0-9a-f]{6}$/i.test(v.mix?.[k]))p.mix[k]=v.mix[k].toLowerCase();
     for(const [k,min,max] of [['danmakuTransparency',0,100],['danmakuSize',14,48],['danmakuSpeed',.5,2],['danmakuDensity',20,100]])p.mix[k]=number(v.mix?.[k],min,max,p.mix[k]);
     if([25,50,75,100].includes(v.mix?.danmakuArea))p.mix.danmakuArea=v.mix.danmakuArea;
     if([0,10,15,30,60,120,300].includes(v.mix?.scMaxDuration))p.mix.scMaxDuration=v.mix.scMaxDuration;
@@ -63,7 +64,7 @@
   window.configurations={changed,connected,setAIEnabled,capture,apply:(p,options)=>{apply(p,options);changed();}};
   apply(state.selected==='custom'?state.custom:builtin(state.selected==='voice'));persist();
   select.addEventListener('change',()=>{if(select.value==='custom'&&!state.custom)return;state.selected=select.value;apply(state.selected==='custom'?state.custom:builtin(state.selected==='voice'));persist();});
-  const settings=new Set(['themeSelect','volume','sourceVolumeA','sourceVolumeB','audioToggleA','audioToggleB','videoToggleA','videoToggleB','chatToggleA','chatToggleB','qualityA','qualityB','mainQuality','showChat','showSC','danmakuTransparency','danmakuSize','danmakuSpeed','danmakuDensity','danmakuArea','scMaxDuration','offset','offsetValue','base','chatOffset','replayCache','filterSource','filterStem','filterStrength','filterMode','filterPerformance']);
+  const settings=new Set(['themeSelect','volume','sourceVolumeA','sourceVolumeB','audioToggleA','audioToggleB','videoToggleA','videoToggleB','chatToggleA','chatToggleB','qualityA','qualityB','mainQuality','showChat','showSC','danmakuTransparency','danmakuSize','danmakuSpeed','danmakuDensity','danmakuArea','danmakuSourceColors','danmakuPlatformColors','danmakuColorA','danmakuColorB','scMaxDuration','offset','offsetValue','base','chatOffset','replayCache','filterSource','filterStem','filterStrength','filterMode','filterPerformance']);
   for(const type of ['input','change'])document.addEventListener(type,event=>{if(settings.has(event.target.id))changed();});
   document.addEventListener('click',event=>{if(event.target.closest('[data-step],#mute,#swapView,#reset,#resetDanmakuStyle'))changed();});
   $('offsetValue').addEventListener('keydown',event=>{if(event.key==='Enter')changed();});

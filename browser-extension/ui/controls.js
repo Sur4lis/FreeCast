@@ -6,6 +6,7 @@ function applyMix() {
   b.muted = mix.muted || !mix.audioB;
   for (const key of ['audioA', 'audioB', 'videoA', 'videoB', 'chatA', 'chatB']) $(key.replace(/(A|B)$/, 'Toggle$1')).checked = mix[key];
   $('showChat').checked = mix.showChat;
+  window.danmakuStyle?.sourceColors();
   $('mute').textContent = mix.muted ? '取消静音' : '静音';
   $('mute').setAttribute('aria-pressed', String(mix.muted));
   $('mute').setAttribute('aria-label', mix.muted ? '取消静音' : '静音');
@@ -342,7 +343,7 @@ for (const key of ['A', 'B']) {
     if (running && !demo && !$('connect').disabled) await connect();
   });
   $('chatToggle' + key).addEventListener('change', async () => {
-    const source=key.toLowerCase(),enabled=$('chatToggle'+key).checked,token=generation,revision=++toggleRevision;mix['chat'+key]=enabled;save();
+    const source=key.toLowerCase(),enabled=$('chatToggle'+key).checked,token=generation,revision=++toggleRevision;mix['chat'+key]=enabled;window.danmakuStyle?.sourceColors();save();
     const current=()=>token===generation&&revision===toggleRevision;
     try{if(enabled&&running&&!demo&&channels[source])await window.live.ensureSources([channels[source].room.id]);if(current())await refreshChat(source);}
     catch(error){if(current()){chatStates[source]=error.message;renderChatStatus();notice(error.message,true);}}

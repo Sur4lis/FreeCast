@@ -8,7 +8,7 @@ let channels = {}, running = false, paused = false, demo = false, generation = 0
 let connecting = null;
 let offset = 0, pauseStarted = 0, pauseLag = 0, demoStart = 0, demoPaused = 0, lastDemoMessage = -1;
 let audioContext, oscillator, gain, lane = 0;
-const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50 });
+const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50, danmakuSourceColors: true, danmakuPlatformColors: false, danmakuColorA: '#66ccff', danmakuColorB: '#ff99cc' });
 let mix = {...defaultMix};
 let favorites = [], activeSource = 'a', viewMode = 'normal';
 const defaultFavorites = [
@@ -42,7 +42,8 @@ try {
   const s = JSON.parse(localStorage.getItem(settingsKey) || 'null');
   if (s) { $('roomA').value = s.a || '84074'; $('roomB').value = s.b || '6'; offset = clamp(Number(s.offset) || 0, -60, 60); $('base').value = ['3', '5', '8'].includes(s.base) ? s.base : '3'; $('chatOffset').value = clamp(Number(s.chat) || 0, -10, 30); $('volume').value = clamp(Number(s.volume) || 0, 0, 100); }
   if (s) {
-    for (const key of ['audioA', 'audioB', 'videoA', 'videoB', 'chatA', 'chatB', 'muted', 'showChat', 'showSC']) if (typeof s.mix?.[key] === 'boolean') mix[key] = s.mix[key];
+    for (const key of ['audioA', 'audioB', 'videoA', 'videoB', 'chatA', 'chatB', 'muted', 'showChat', 'showSC', 'danmakuSourceColors', 'danmakuPlatformColors']) if (typeof s.mix?.[key] === 'boolean') mix[key] = s.mix[key];
+    for (const key of ['danmakuColorA', 'danmakuColorB']) if (/^#[0-9a-f]{6}$/i.test(s.mix?.[key])) mix[key] = s.mix[key].toLowerCase();
     for (const key of ['qualityA', 'qualityB']) if (Number.isSafeInteger(s.mix?.[key]) && s.mix[key]>=0 && s.mix[key]<=1000000) mix[key] = s.mix[key];
     for (const [key, min, max] of [['danmakuTransparency', 0, 100], ['danmakuSize', 14, 48]]) if (Number.isFinite(s.mix?.[key])) mix[key] = clamp(Math.round(s.mix[key]), min, max);
     if(Number.isFinite(s.mix?.danmakuSpeed))mix.danmakuSpeed=clamp(s.mix.danmakuSpeed,.5,2);
@@ -299,6 +300,7 @@ function showDanmaku(message,group){
   if(!$('showChat').checked)return;
   const bullet = document.createElement('span'); bullet.className = message.isSelf ? 'bullet is-self' : 'bullet'; ChatContent.append(bullet, message);
   bullet.dataset.source = message.source || 'a';
+  if(typeof message.color==='string'&&/^#[0-9a-f]{6}$/i.test(message.color))bullet.style.setProperty('--danmaku-native-color',message.color.toLowerCase());
   window.chatBlocking?.tag(bullet,message);
   window.chatRules?.attachBullet(group,bullet,message);
   if(window.danmakuLayout?.add(bullet))window.danmakuActions?.attach(bullet,message);

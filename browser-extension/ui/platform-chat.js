@@ -23,7 +23,7 @@
             if(c.platform==='douyu')for(const item of decoder.read(event.data)){
               if(item.type==='loginres'){send(P.douyuPacket({type:'joingroup',rid:c.room,gid:'-9999'}));ready();}
               if(item.type==='error')throw Error('斗鱼弹幕鉴权失败');
-              if(item.type==='chatmsg'&&(!item.rid||item.rid===String(c.room)))messages.push(P.message('douyu',item.nn,item.uid,item.txt,item.cid));
+              if(item.type==='chatmsg'&&(!item.rid||item.rid===String(c.room)))messages.push(P.douyuMessage(item));
             }
             else if(c.platform==='huya'){const decoded=P.huyaDecode(event.data);messages=decoded.messages;if(decoded.connected)ready();}
             else {const decoded=await P.douyinDecode(event.data);if(!current())return;if(decoded.ack)send(decoded.ack);messages=decoded.messages;ready();}

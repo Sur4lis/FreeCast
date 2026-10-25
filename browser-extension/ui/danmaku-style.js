@@ -1,6 +1,17 @@
 // Appearance changes affect the video overlay only; receiving/sending stays unchanged.
 (()=>{
   const button=$('danmakuSettingsButton'),panel=$('danmakuSettings'),overlay=$('danmaku');
+  function sourceColors(){
+    overlay.dataset.sourceColors=String(mix.danmakuSourceColors&&mix.videoA&&mix.videoB&&mix.chatA&&mix.chatB);
+    overlay.dataset.platformColors=String(mix.danmakuPlatformColors);
+    $('danmakuPlatformColors').checked=mix.danmakuPlatformColors;
+    $('danmakuSourceColors').checked=mix.danmakuSourceColors;
+    for(const side of ['A','B']){
+      const key='danmakuColor'+side;
+      overlay.style.setProperty('--danmaku-color-'+side.toLowerCase(),mix[key]);
+      $(key).value=mix[key];$(key).disabled=!mix.danmakuSourceColors;
+    }
+  }
   function layout(){
     window.danmakuLayout?.layout();
     const controls=document.querySelector('.player-bottom'),bottom=controls.parentElement===$('player')?Math.ceil(controls.getBoundingClientRect().height+12):12;
@@ -8,6 +19,7 @@
     panel.style.bottom=bottom+'px';panel.style.maxHeight=Math.max(60,rect.bottom-bottom-Math.max(12,rect.top+12))+'px';
   }
   function apply(){
+    sourceColors();
     overlay.style.opacity=String(1-mix.danmakuTransparency/100);
     overlay.style.setProperty('--danmaku-font-size',mix.danmakuSize+'px');
     $('superChatOverlay').style.opacity='1';
@@ -26,12 +38,17 @@
   $('danmakuSpeed').addEventListener('input',event=>{const value=Number(event.target.value);if(!Number.isFinite(value))return;mix.danmakuSpeed=clamp(Math.round(value*10)/10,.5,2);apply();save();});
   $('danmakuDensity').addEventListener('input',event=>{const n=Number(event.target.value);if(!Number.isFinite(n))return;mix.danmakuDensity=clamp(Math.round(n),20,100);apply();save();});
   $('danmakuArea').addEventListener('change',()=>{mix.danmakuArea=Number($('danmakuArea').value);apply();save();});
-  $('resetDanmakuStyle').addEventListener('click',()=>{for(const key of ['danmakuTransparency','danmakuSize','danmakuSpeed','scMaxDuration','danmakuDensity','danmakuArea'])mix[key]=defaultMix[key];apply();window.superChats?.tick();save();});
+  $('danmakuSourceColors').addEventListener('change',()=>{mix.danmakuSourceColors=$('danmakuSourceColors').checked;sourceColors();save();});
+  $('danmakuPlatformColors').addEventListener('change',()=>{mix.danmakuPlatformColors=$('danmakuPlatformColors').checked;sourceColors();save();});
+  $('danmakuColorsButton').addEventListener('click',()=>$('danmakuColorsDialog').showModal());
+  $('closeDanmakuColors').addEventListener('click',()=>$('danmakuColorsDialog').close());
+  for(const key of ['danmakuColorA','danmakuColorB'])$(key).addEventListener('input',event=>{if(!/^#[0-9a-f]{6}$/i.test(event.target.value))return;mix[key]=event.target.value.toLowerCase();sourceColors();save();});
+  $('resetDanmakuStyle').addEventListener('click',()=>{for(const key of ['danmakuTransparency','danmakuSize','danmakuSpeed','scMaxDuration','danmakuDensity','danmakuArea','danmakuSourceColors','danmakuPlatformColors','danmakuColorA','danmakuColorB'])mix[key]=defaultMix[key];apply();window.superChats?.tick();save();});
   $('scMaxDuration').addEventListener('change',()=>{mix.scMaxDuration=Number($('scMaxDuration').value);window.superChats?.tick();save();});
   $('showSC').addEventListener('change',()=>{mix.showSC=$('showSC').checked;window.superChats?.tick();save();});
   document.addEventListener('pointerdown',event=>{if(!panel.hidden&&!panel.contains(event.target)&&!button.contains(event.target))open(false);});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden&&!document.querySelector('dialog[open]')){event.preventDefault();event.stopImmediatePropagation();open(false,true);}},true);
   const observer=new ResizeObserver(layout);observer.observe($('player'));observer.observe(document.querySelector('.player-bottom'));observer.observe(overlay);
   window.addEventListener('scroll',layout,{passive:true});window.addEventListener('resize',layout,{passive:true});
-  window.danmakuStyle={apply};apply();
+  window.danmakuStyle={apply,sourceColors};apply();
 })();

@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 
-function fixture(saved={}){
+function fixture(saved={},mobile=false){
   const storage=new Map(Object.entries(saved)),elements=new Map(),chatListeners=[],recorded=[],remembered=[],canvases=[];
   let document;
   class Element {
@@ -48,7 +48,8 @@ function fixture(saved={}){
   element('playerBottom').parentElement=element('player');element('superChatOverlay').hidden=true;
   const run=source=>vm.runInContext(source,context);
   const load=name=>vm.runInContext(fs.readFileSync(path.join(__dirname,'../browser-extension/ui',name),'utf8'),context,{filename:name});
-  for(const file of ['app.js','browser.js','chat-rules.js','danmaku-style.js','configurations.js'])load(file);
+  for(const file of ['app.js','browser.js','chat-rules.js','danmaku-style.js'])load(file);
+  if(mobile)run(fs.readFileSync(path.join(__dirname,'../android/web/configurations.js'),'utf8'));else load('configurations.js');
   run('account={loggedIn:true,uid:123,name:"测试用户"}');
   return{context,element,run,load,storage,recorded,remembered,canvases,emit:m=>chatListeners.forEach(fn=>fn(m))};
 }
@@ -65,15 +66,17 @@ test('own comments match the logged-in UID across both Bili sources, never text 
 
 test('receive-time ownership survives playback delay, replay and account changes, including image emotes',()=>{
   const f=fixture();f.run("running=true;mix.chatB=true;channels={a:{edge:()=>10},b:{edge:()=>20}};");
-  f.emit({type:'message',source:'a',uid:'123',text:'自己的文字'});
-  f.emit({type:'message',source:'b',uid:'123',text:'自己的表情',emoticon:{unique:'image-1',url:'https://i0.hdslb.com/example.png'}});
+  f.emit({type:'message',source:'a',uid:'123',text:'自己的文字',color:'#66ccff'});
+  f.emit({type:'message',source:'b',uid:'123',text:'自己的表情',color:'#ff99cc',emoticon:{unique:'image-1',url:'https://i0.hdslb.com/example.png'}});
   f.emit({type:'message',source:'b',uid:'456',text:'自己的文字'});
   assert.deepEqual(f.remembered.map(x=>x.m.isSelf),[true,true,false]);
+  assert.deepEqual(f.remembered.map(x=>x.m.color),['#66ccff','#ff99cc',undefined]);
   f.run('account={loggedIn:true,uid:456};globalThis.pending=[...queue.take(100),...queueB.take(100)];');
   // Use the real rendering entry point, with a layout sink in place of animation.
   f.context.danmakuLayout={layout(){},speed(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
   for(const m of f.context.pending)f.context.showMessage(m);
   assert.deepEqual(f.element('danmaku').children.map(e=>e.className),['bullet is-self','bullet is-self','bullet']);
+  assert.deepEqual(f.element('danmaku').children.map(e=>e.style['--danmaku-native-color']),['#66ccff','#ff99cc',undefined]);
   const before=f.element('danmaku').children.length;f.context.showMessage(f.remembered[0].m,true);
   assert.equal(f.element('danmaku').children.length,before);
   assert.equal(f.recorded[0].isSelf,true);
@@ -108,7 +111,8 @@ test('retired saved colors are discarded while other appearance settings survive
 test('recorded overlay keeps own sky-blue borders and refreshes merged message textures',()=>{
   const f=fixture();f.context.danmakuLayout={layout(){},speed(){},add:bullet=>{f.element('danmaku').append(bullet);return true;}};
   f.context.showMessage({uid:'123',text:'自己的弹幕'});f.context.showMessage({uid:'456',text:'其他弹幕'});
-  f.context.getComputedStyle=el=>({backgroundColor:'transparent',borderRadius:'2px',borderTopWidth:el.classList.contains('is-self')?'1px':'0px',borderTopColor:'#66d9ef'});
+  let color='#66ccff';
+  f.context.getComputedStyle=el=>({color,backgroundColor:'transparent',borderRadius:'2px',borderTopWidth:el.classList.contains('is-self')?'1px':'0px',borderTopColor:'#66d9ef'});
   f.load('record-renderer.js');
   const drawContext={fillRect(){},save(){},restore(){},scale(){},translate(){},beginPath(){},rect(){},clip(){},drawImage(){}};
   const canvas={width:800,height:450,getContext:()=>drawContext};
@@ -116,6 +120,41 @@ test('recorded overlay keeps own sky-blue borders and refreshes merged message t
   f.context.recordRenderer.draw(canvas,false);assert.equal(f.canvases.length,2);
   f.element('danmaku').children[0].textContent+=' ×2';
   f.context.recordRenderer.draw(canvas,false);assert.deepEqual(f.canvases.slice(2).map(c=>c.ops),[['#66d9ef']]);
+  const before=f.canvases.length;color='#ff99cc';f.context.recordRenderer.draw(canvas,false);
+  assert.equal(f.canvases.length,before+2,'source color edits refresh both recorded textures immediately');
+});
+
+for(const mobile of fs.existsSync(path.join(__dirname,'../android/web/configurations.js'))?[false,true]:[false])test(`${mobile?'Android':'PC'} source colors survive reload, preset switching and invalid imported colors`,()=>{
+  const f=fixture({},mobile),overlay=f.element('danmaku');
+  assert.equal(overlay.dataset.sourceColors,'false');assert.equal(overlay.dataset.platformColors,'false');
+  f.run('mix.chatB=true;danmakuStyle.sourceColors()');
+  assert.equal(overlay.dataset.sourceColors,'true');
+  assert.equal(overlay.style['--danmaku-color-a'],'#66ccff');
+  assert.equal(overlay.style['--danmaku-color-b'],'#ff99cc');
+  f.run('mix.videoA=false;danmakuStyle.sourceColors()');assert.equal(overlay.dataset.sourceColors,'false');
+  f.run('mix.videoA=true;mix.videoB=false;danmakuStyle.sourceColors()');assert.equal(overlay.dataset.sourceColors,'false');
+  f.run('mix.videoB=true;danmakuStyle.sourceColors()');assert.equal(overlay.dataset.sourceColors,'true');
+  f.run('mix.chatA=false;danmakuStyle.sourceColors()');assert.equal(overlay.dataset.sourceColors,'false');
+  f.run('mix.chatA=true;danmakuStyle.sourceColors()');
+  f.element('danmakuPlatformColors').checked=true;f.element('danmakuPlatformColors').dispatch('change');
+  assert.equal(overlay.dataset.platformColors,'true');
+  for(const [id,value] of [['danmakuColorA','#1188EE'],['danmakuColorB','#EE2288']]){f.element(id).value=value;f.element(id).dispatch('input');}
+  f.element('danmakuSourceColors').checked=false;f.element('danmakuSourceColors').dispatch('change');
+  assert.equal(overlay.dataset.sourceColors,'false');assert.equal(f.element('danmakuColorA').disabled,true);
+  const saved=f.context.configurations.capture(),reloaded=fixture(Object.fromEntries(f.storage),mobile);
+  assert.equal(reloaded.context.configurations.capture().mix.danmakuColorA,'#1188ee');
+  assert.equal(reloaded.context.configurations.capture().mix.danmakuColorB,'#ee2288');
+  assert.equal(reloaded.context.configurations.capture().mix.danmakuSourceColors,false);
+  assert.equal(reloaded.context.configurations.capture().mix.danmakuPlatformColors,true);
+  reloaded.element('resetDanmakuStyle').dispatch('click');
+  assert.equal(reloaded.element('danmaku').dataset.sourceColors,'true');
+  assert.equal(reloaded.element('danmaku').dataset.platformColors,'false');
+  assert.equal(reloaded.element('danmakuColorA').value,'#66ccff');assert.equal(reloaded.element('danmakuColorB').value,'#ff99cc');
+  reloaded.context.configurations.apply(saved);assert.equal(reloaded.element('danmakuColorB').value,'#ee2288');
+  for(const bad of ['red','url(https://example.test)','#abc','#123456;display:none',null,17]){
+    reloaded.context.configurations.apply({mix:{danmakuColorA:bad,danmakuColorB:bad}});
+    assert.equal(reloaded.element('danmakuColorA').value,'#66ccff');assert.equal(reloaded.element('danmakuColorB').value,'#ff99cc');
+  }
 });
 
 test('v1.21 merging preserves source boundaries, stable emote IDs and borders when a merged bullet reappears',()=>{

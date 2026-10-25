@@ -36,8 +36,9 @@
     if(cmd==='DANMU_MSG'){
       const info=body.info;if(!Array.isArray(info))return null;
       const text=String(info[1]||'').slice(0,2000),extra=object(object(info[0]?.[15]).extra),emotes=[];
+      const rgb=info[0]?.[3],color=Number.isInteger(rgb)&&rgb>=0&&rgb<=0xffffff?'#'+rgb.toString(16).padStart(6,'0'):undefined;
       for(const [token,value] of Object.entries(object(extra.emots)).slice(0,64)){const image=emoticon(value);if(image&&token.length<=80&&token.length&&text.includes(token))emotes.push({token,...image});}
-      return {type:'message',text,user:String(info[2]?.[1]||'观众').slice(0,100),uid:String(info[2]?.[0]||''),emoticon:emoticon(info[0]?.[13]),emotes,receivedAt};
+      return {type:'message',text,user:String(info[2]?.[1]||'观众').slice(0,100),uid:String(info[2]?.[0]||''),color,emoticon:emoticon(info[0]?.[13]),emotes,receivedAt};
     }
     if(cmd==='SUPER_CHAT_MESSAGE'){
       const id=String(data.id??'');if(!/^[\w-]{1,80}$/.test(id))return null;

@@ -88,7 +88,7 @@
     if(s.probing&&s.worker){for(const type of s.waiting.keys())settle(s,type,null,abort());s.worker.terminate();s.worker=null;s.resolveDone();}
     stage='正在完成 MP4…';stopping=(async()=>{if(startTask)await startTask;await cleanup(s);})();render();try{await stopping;}finally{stopping=null;render();}
   }
-  function message(m){const s=session;if(!s?.active)return;s.worker.postMessage({type:'chat',value:{type:m.type||'danmaku',t:Math.round((vocal.ctx.currentTime-s.origin)*1000),source:m.source||'a',user:m.user,uid:m.uid,isSelf:m.isSelf===true,text:m.text,emoticon:m.emoticon,emotes:m.emotes,price:m.price,duration:m.duration,at:m.at}});}
+  function message(m){const s=session;if(!s?.active)return;s.worker.postMessage({type:'chat',value:{type:m.type||'danmaku',t:Math.round((vocal.ctx.currentTime-s.origin)*1000),source:m.source||'a',platform:m.platform||'bilibili',color:/^#[0-9a-f]{6}$/i.test(m.color)?m.color:undefined,user:m.user,uid:m.uid,isSelf:m.isSelf===true,text:m.text,emoticon:m.emoticon,emotes:m.emotes,price:m.price,duration:m.duration,at:m.at}});}
   async function scan(ask=false){
     const revision=++scanRevision,list=$('recordRecoveryList');list.replaceChildren();$('recordRecoveryStatus').textContent='正在检查…';
     try{await permission(ask);const selected=folder,{readJournal,partsName}=await import('./record-files.js');let count=0;

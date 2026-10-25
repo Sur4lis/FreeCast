@@ -44,10 +44,12 @@
   const one=(o,n)=>o[n]?.[0],text=(o,n)=>{const v=one(o,n);return v instanceof Uint8Array?dec.decode(v):'';};
   async function gunzip(b){if(b[0]!==31||b[1]!==139)return b;const reader=new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip')).getReader(),parts=[];let size=0;try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>LIMIT)throw Error('弹幕数据超限');parts.push(value);}}finally{await reader.cancel();}return concat(parts);}
   const message=(platform,user,uid,text,id='')=>({type:'message',platform,user:String(user||'观众').slice(0,100),uid:String(uid||''),text:String(text||'').slice(0,2000),id:String(id||''),receivedAt:Date.now()});
+  const color=value=>Number.isInteger(value)&&value>=0&&value<=0xffffff?'#'+value.toString(16).padStart(6,'0'):typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():undefined;
+  function douyuMessage(item){const m=message('douyu',item.nn,item.uid,item.txt,item.cid);m.color=/^[1-6]$/.test(item.col)?['#ff0000','#1e87f0','#7ac84b','#ff7f00','#9b39f4','#ff69b4'][Number(item.col)-1]:undefined;return m;}
   async function douyinDecode(data){const frame=pb(data),payload=one(frame,8);if(!payload?.length)return {messages:[]};const response=pb(await gunzip(payload)),messages=[];
-    for(const raw of response[1]||[]){const item=pb(raw),method=text(item,1);if(method!=='WebcastChatMessage')continue;const chat=pb(one(item,2)),user=pb(one(chat,2)||new Uint8Array()),m=message('douyin',text(user,3),one(user,1),text(chat,3),one(item,3));const secUid=text(user,46);if(/^MS4wLjAB[A-Za-z0-9_-]{10,200}$/.test(secUid))m.secUid=secUid;messages.push(m);}
+    for(const raw of response[1]||[]){const item=pb(raw),method=text(item,1);if(method!=='WebcastChatMessage')continue;const chat=pb(one(item,2)),user=pb(one(chat,2)||new Uint8Array()),m=message('douyin',text(user,3),one(user,1),text(chat,3),one(item,3));m.color=color(text(chat,6));const secUid=text(user,46);if(/^MS4wLjAB[A-Za-z0-9_-]{10,200}$/.test(secUid))m.secUid=secUid;messages.push(m);}
     return{messages,ack:one(response,9)===1n?pbPacket([[2,one(frame,2)||0n],[7,'ack'],[8,text(response,5)]]):null};
   }
-  function huyaDecode(data){const command=tars(data),type=Number(command[0]),messages=[];if(type===7){const push=tars(command[1]);if(Number(push[1])===1400){const chat=tars(push[2]),u=chat[0]||{};messages.push(message('huya',u[2],u[0],chat[3]));}}return{messages,connected:type===2||type===7,kind:type};}
-  window.PlatformChatProtocol={douyuPacket,DouyuDecoder,TarsWriter,tars,huyaJoin,huyaHeartbeat,huyaDecode,pb,pbPacket,douyinDecode,message};
+  function huyaDecode(data){const command=tars(data),type=Number(command[0]),messages=[];if(type===7){const push=tars(command[1]);if(Number(push[1])===1400){const chat=tars(push[2]),u=chat[0]||{},m=message('huya',u[2],u[0],chat[3]);m.color=color(chat[6]?.[0])||color(chat[5]?.[0]);messages.push(m);}}return{messages,connected:type===2||type===7,kind:type};}
+  window.PlatformChatProtocol={douyuPacket,DouyuDecoder,douyuMessage,TarsWriter,tars,huyaJoin,huyaHeartbeat,huyaDecode,pb,pbPacket,douyinDecode,message};
 })();
