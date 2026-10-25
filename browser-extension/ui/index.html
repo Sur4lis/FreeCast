@@ -17,7 +17,7 @@
   <div id="themeMenu" class="theme-popover" hidden><div id="themeRootMenu" class="theme-menu" role="menu" aria-label="皮肤"></div></div>
   <main>
     <div class="setup-toolbar">
-    <section class="favorites-bar"><div class="favorites-label">收藏 UP 主<small>拖动排序 · 拖入 A / B</small></div><div id="favorites"></div><div id="combinations" aria-label="组合收藏"></div><span class="platform-summary" title="粘贴完整链接，支持 B 站、虎牙、斗鱼、抖音弹幕；支持跨平台发送。其他网页可识别公开 HLS / FLV 直播流。">B 站 · 虎牙 · 斗鱼 · 抖音</span><button id="addCombination" title="收藏当前两路和观看设置">＋ 组合</button><button id="addFavorite">＋ 收藏</button></section>
+    <section class="favorites-bar"><div class="favorites-label">收藏 UP 主<small>拖动排序 · 拖入 A / B</small></div><div id="favorites"></div><div id="combinations" aria-label="组合收藏"></div><span class="platform-summary" title="粘贴完整链接，支持 B 站、虎牙、斗鱼、抖音弹幕；支持跨平台发送。其他网页可识别公开 HLS / FLV 直播流。">B 站 · 虎牙 · 斗鱼 · 抖音</span><button id="importFollowing" title="从 B 站关注列表导入正在直播的 UP 主">从关注导入</button><button id="addCombination" title="收藏当前两路和观看设置">＋ 组合</button><button id="addFavorite">＋ 收藏</button></section>
     </div>
     <section class="connection-panel">
     <section class="sources" aria-label="直播来源">
@@ -63,6 +63,7 @@
     <footer><span id="notice" role="status">支持公开直播间 · 仅在本机组合播放</span><span>手动校准 · 缓冲内对齐 · 不同直播源无共同时间码</span></footer>
   </main>
   <dialog id="favoriteDialog"><form id="favoriteForm"><h2>收藏 UP 主</h2><p>输入 B 站房间号或任意直播链接。其他平台连接成功后可获取主播信息。</p><input id="favoriteRoom" placeholder="例如 84074" aria-label="收藏直播间" required><p id="favoriteError" role="status"></p><div class="dialog-actions"><button type="button" id="favoriteCancel">取消</button><button id="favoriteSubmit" class="primary">添加收藏</button></div></form></dialog>
+  <dialog id="followingDialog" class="tools-dialog"><h2>从关注列表导入</h2><p>读取当前 B 站账号关注中正在直播的 UP 主，勾选后加入收藏。收藏上限 100 个。</p><div id="followingStatus" role="status">正在读取…</div><div id="followingList" class="following-list"></div><div class="dialog-actions"><button type="button" id="followingCancel">关闭</button></div></dialog>
   <dialog id="blockedDialog" class="tools-dialog"><h2>屏蔽弹幕</h2><p>仅在本机隐藏所选用户的弹幕和 SC，可随时解除。</p><form id="blockUserForm"><label for="blockPlatform">平台 <select id="blockPlatform"><option value="bilibili">B 站</option><option value="huya">虎牙</option><option value="douyu">斗鱼</option><option value="douyin">抖音</option></select></label><label for="blockUserInput"> UID 或完整昵称</label><div class="block-add"><input id="blockUserInput" maxlength="100" required placeholder="输入 UID；无 UID 时按完整昵称匹配"><button class="primary">屏蔽</button></div></form><p id="blockStatus" role="status"></p><div id="blockedList"></div><div class="dialog-actions"><button id="closeBlocked">关闭</button></div></dialog>
   <dialog id="combinationDialog" class="tools-dialog"><form id="combinationForm"><h2>收藏当前组合</h2><label>名称 <input id="combinationName" maxlength="40" required placeholder="例如：比赛＋解说"></label><p>保存 A / B 直播源、音画开关、时间偏移和观看设置。</p><div class="dialog-actions"><button type="button" data-close="combinationDialog">取消</button><button class="primary">收藏</button></div></form></dialog>
 <dialog id="diagnosticsDialog" class="tools-dialog"><h2>播放与 AI 诊断</h2><div id="diagnosticsContent"></div><div class="dialog-actions"><button id="copyDiagnostics">复制诊断</button><button data-close="diagnosticsDialog">关闭</button></div></dialog>
