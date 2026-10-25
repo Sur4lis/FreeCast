@@ -40,7 +40,9 @@
 .combination-profile div{min-width:0}.combination-profile strong,.combination-profile small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .combination-profile strong{font-size:12px;line-height:20px;font-weight:500}.combination-profile small{font-size:11px;line-height:17px;color:var(--muted)}
 #recordDialog .record-quality{justify-content:space-between;gap:12px}#recordQuality{min-width:120px}#recordQualityHint{display:block;margin:-5px 0 14px}
+#recordDialog{max-width:600px}#recordDialog>p{line-height:1.65}#recordDialog small{line-height:1.65;color:var(--muted)}.record-folder{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.record-state{margin:16px 0;padding:12px 14px;background:var(--settings-field,var(--panel));border:1px solid var(--settings-line);border-radius:10px}.record-state #recordStatus{margin:0}.record-state #recordMetrics:empty{display:none}.record-recovery{margin-top:18px;border-top:1px solid var(--settings-line);padding-top:12px}.record-recovery summary{cursor:pointer}.record-recovery p{font-size:12px;line-height:1.65;color:var(--muted)}#recordRecoveryList>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0}#recordRecoveryList span{font-size:12px;overflow-wrap:anywhere}
 :root #recordDialog,:root #blockedDialog{background:var(--settings-panel);color:var(--settings-ink);border-color:var(--settings-line);backdrop-filter:none}
+:root[data-theme=dark] #recordDialog .primary{color:#17200d}
 @media(prefers-reduced-motion:reduce){.control-chevron{transition:none}}
 footer.app-footer{align-items:center;flex-wrap:wrap;gap:12px;color:var(--muted)}
 .app-footer #notice{flex:1;min-width:0}

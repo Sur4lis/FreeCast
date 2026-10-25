@@ -14,9 +14,10 @@ test('native pixels and frame rate survive while performance caps only high-reso
   const native8k=q.config('source',{videoWidth:7680,videoHeight:4320});assert.equal(native8k.width,7680);
   assert.throws(()=>q.config('source',{videoWidth:0,videoHeight:0}),/尚未就绪/);
 });
-test('encoder fallback keeps the largest supported frame and even dimensions',()=>{
+test('source settings prioritize native pixels and provide lower-cost compatibility fallbacks',()=>{
   const list=q.candidates(q.config('source',{videoWidth:3840,videoHeight:2160},60));
   assert.deepEqual(Array.from(list,x=>[x.width,x.height,x.fps]),[[3840,2160,60],[3840,2160,30],[2560,1440,60],[2560,1440,30],[1920,1080,60],[1920,1080,30]]);
+  const odd=q.config('source',{videoWidth:1921,videoHeight:1081},29.97);assert.deepEqual([odd.width,odd.height,odd.fps],[1920,1080,30]);
   assert.equal(q.level(1920,1080,60),'2a');assert.equal(q.level(3840,2160,60),'34');assert.equal(q.level(7680,4320,60),'3d');
 });
 test('source rate comes from tracks or presented frame timestamps, with bounded wait',async()=>{

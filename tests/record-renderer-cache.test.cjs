@@ -18,3 +18,13 @@ test('active recording reuses loaded emotes and closes each bitmap on cleanup',a
  assert.equal(f.context.loadImage('emote'),bitmap);assert.equal(bitmap.closed,0);
  f.context.window.recordRenderer.clear();f.context.window.recordRenderer.clear();assert.equal(bitmap.closed,1);
 });
+
+test('floating mini geometry follows movement and resizing relative to the video area',()=>{
+ const f=fixture(),geometry=f.context.window.recordRenderer.geometry,main={left:100,top:50,width:960,height:540};
+ const a=geometry(main,{left:200,top:120,width:240,height:135},1920,1080,true);
+ assert.deepEqual([a.x,a.y,a.w,a.h],[200,140,480,270]);
+ const b=geometry(main,{left:450,top:250,width:320,height:180},1920,1080,true);
+ assert.deepEqual([b.x,b.y,b.w,b.h],[700,400,640,360]);
+ const outside=geometry(main,{left:1200,top:800,width:240,height:135},1920,1080,true);assert.ok(outside.x>1920,'off-screen floating windows stay off-screen');
+ const sidebar=geometry(main,{left:1200,top:800,width:240,height:135},1920,1080,false);assert.ok(sidebar.x+sidebar.w<=1920&&sidebar.y+sidebar.h<=1080,'docked windows retain an inset');
+});

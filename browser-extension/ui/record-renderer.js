@@ -17,17 +17,24 @@
     const crop=window.miniWindow?.crop(video),sx=crop?crop.x*video.videoWidth:0,sy=crop?crop.y*video.videoHeight:0,sw=crop?crop.w*video.videoWidth:video.videoWidth,sh=crop?crop.h*video.videoHeight:video.videoHeight;
     const scale=Math.min(dest.w/sw,dest.h/sh),w=sw*scale,h=sh*scale;ctx.imageSmoothingEnabled=Math.abs(scale-1)>.00001;ctx.imageSmoothingQuality='high';ctx.drawImage(video,sx,sy,sw,sh,dest.x+(dest.w-w)/2,dest.y+(dest.h-h)/2,w,h);ctx.restore();
   }
-  function draw(canvas,includeMini){const ctx=canvas.getContext('2d',{alpha:false}),w=canvas.width,h=canvas.height,main=$('mainSlot'),r=main.getBoundingClientRect();ctx.fillStyle='#08090b';ctx.fillRect(0,0,w,h);if(!r.width||!r.height)return;drawVideo(ctx,main.querySelector('video'),{x:0,y:0,w,h},main);
+  function geometry(main,mini,w,h,floating){
+    const overlaps=mini.left<main.left+main.width&&mini.left+mini.width>main.left&&mini.top<main.top+main.height&&mini.top+mini.height>main.top;
+    if(floating||overlaps)return{x:(mini.left-main.left)*w/main.width,y:(mini.top-main.top)*h/main.height,w:mini.width*w/main.width,h:mini.height*h/main.height};
+    const width=Math.min(w*.26,h*.45*mini.width/mini.height),height=width*mini.height/mini.width,pad=Math.min(w,h)*.02;
+    return{x:w-width-pad,y:h-height-pad,w:width,h:height};
+  }
+  function draw(canvas,includeMini){const ctx=canvas.getContext('2d',{alpha:false}),w=canvas.width,h=canvas.height,main=$('mainSlot'),slot=main.getBoundingClientRect(),v=main.querySelector('video');ctx.fillStyle='#08090b';ctx.fillRect(0,0,w,h);if(!slot.width||!slot.height)return;
+    const scale=Math.min(slot.width/(v?.videoWidth||w),slot.height/(v?.videoHeight||h)),width=(v?.videoWidth||w)*scale,height=(v?.videoHeight||h)*scale,r={left:slot.left+(slot.width-width)/2,top:slot.top+(slot.height-height)/2,width,height};drawVideo(ctx,v,{x:0,y:0,w,h},main);
     const overlay=$('danmaku'),dr=overlay.getBoundingClientRect(),sc=$('superChatOverlay'),sr=sc.getBoundingClientRect();
     ctx.save();ctx.scale(w/r.width,h/r.height);ctx.translate(-r.left,-r.top);
     if(mix.showChat){ctx.save();const holes=window.chatAvoidance.rects(dr.width,dr.height);if(!sc.hidden&&sc.children.length)holes.push({x:sr.left-dr.left-4,y:sr.top-dr.top-4,w:sr.width+8,h:sr.height+8});ctx.beginPath();for(const rect of window.chatAvoidance.visible(dr.width,dr.height,holes))ctx.rect(dr.left+rect.x,dr.top+rect.y,rect.w,rect.h);ctx.clip();
       for(const el of overlay.children){const b=el.getBoundingClientRect();ctx.globalAlpha=1-mix.danmakuTransparency/100;ctx.drawImage(texture(el,Math.max(1,w/r.width,h/r.height)),b.left,b.top,b.width,b.height);}ctx.restore();}
     if(!sc.hidden){for(const el of sc.children){const b=el.getBoundingClientRect();ctx.drawImage(texture(el,Math.max(1,w/r.width,h/r.height)),b.left,b.top,b.width,b.height);}}ctx.restore();
-    const mini=$('miniSlot'),panel=$('miniPanel');if(includeMini&&!panel.hidden&&mini.clientWidth>0&&mini.clientHeight>0&&!document.body.classList.contains('mini-minimized')){const mw=w*.26,mh=mw*(mini.clientHeight/Math.max(1,mini.clientWidth)),dest={x:w-mw-16,y:h-Math.min(mh,h*.45)-16,w:mw,h:Math.min(mh,h*.45)};
-      miniCanvas ||= document.createElement('canvas');const width=Math.max(1,Math.round(dest.w)),height=Math.max(1,Math.round(dest.h));if(miniCanvas.width!==width)miniCanvas.width=width;if(miniCanvas.height!==height)miniCanvas.height=height;
+    const mini=$('miniSlot'),panel=$('miniPanel');if(includeMini&&!panel.hidden&&mini.clientWidth>0&&mini.clientHeight>0&&!document.body.classList.contains('mini-minimized')){const dest=geometry(r,mini.getBoundingClientRect(),w,h,panel.classList.contains('enlarged'));if(dest.x>=w||dest.y>=h||dest.x+dest.w<=0||dest.y+dest.h<=0)return;
+      miniCanvas ||= document.createElement('canvas');const scale=Math.min(1,w/dest.w,h/dest.h),width=Math.max(1,Math.round(dest.w*scale)),height=Math.max(1,Math.round(dest.h*scale));if(miniCanvas.width!==width)miniCanvas.width=width;if(miniCanvas.height!==height)miniCanvas.height=height;
       const mc=miniCanvas.getContext('2d',{alpha:false});mc.fillStyle='#08090b';mc.fillRect(0,0,width,height);drawVideo(mc,mini.querySelector('video'),{x:0,y:0,w:width,h:height},mini);
       ctx.save();ctx.globalAlpha=window.miniWindow?.opacity?.()??1;ctx.drawImage(miniCanvas,dest.x,dest.y,dest.w,dest.h);ctx.restore();
     }
   }
-  window.recordRenderer={draw,clear(){for(const value of images.values())value.bitmap?.close();images.clear();if(miniCanvas){miniCanvas.width=miniCanvas.height=1;miniCanvas=null;}}};
+  window.recordRenderer={draw,geometry,clear(){for(const value of images.values())value.bitmap?.close();images.clear();if(miniCanvas){miniCanvas.width=miniCanvas.height=1;miniCanvas=null;}}};
 })();
