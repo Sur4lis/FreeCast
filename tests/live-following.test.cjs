@@ -69,3 +69,29 @@ test('verification failures produce an actionable message',async()=>{
   const backend=await api(async()=>({ok:true,json:async()=>({code:-352,message:'风控校验失败'})}));
   await assert.rejects(backend.liveFollowing(),/完成验证/);
 });
+test('HTTP risk-control failures preserve the code and give a retry hint',async()=>{
+  for(const status of [412,429]){
+    const backend=await api(async()=>({ok:false,status}));
+    await assert.rejects(backend.liveFollowing(),error=>error.message.includes(String(status))&&error.message.includes('稍后重试'));
+  }
+});
+test('string false and missing offsets never cause extra feed requests',async()=>{
+  for(const data of [{has_more:'0',offset:2},{has_more:1,offset:null},{has_more:1,offset:-1}]){
+    let calls=0;
+    const backend=await api(async()=>{calls++;return page({...data,items:[{room_id:calls,uname:'主播'}]});});
+    const result=await backend.liveFollowing();
+    assert.equal(calls,1);assert.equal(result.truncated,false);
+  }
+});
+test('the bounded page limit reports partial results instead of claiming completeness',async()=>{
+  let calls=0;
+  const backend=await api(async()=>{calls++;return page({has_more:1,offset:calls,items:[{room_id:calls,uname:'主播'}]});});
+  const result=await backend.liveFollowing();
+  assert.equal(calls,5);assert.equal(result.total,5);assert.equal(result.truncated,true);
+});
+test('Bilibili profiles preserve canonical and short IDs for favorite matching',async()=>{
+  const backend=await api(async url=>page(url.includes('/Room/get_info')?{room_id:7734200,short_id:6,uid:50329118,title:'比赛直播'}:{info:{uname:'赛事',face:'https://i0.hdslb.com/face.jpg'}}));
+  const profile=await backend.getProfile('https://live.bilibili.com/6');
+  assert.equal(profile.id,7734200);assert.equal(profile.roomId,7734200);assert.equal(profile.shortId,6);
+  assert.equal(profile.inputId,6);assert.equal(profile.anchorId,50329118);assert.equal(profile.platform,'bilibili');
+});

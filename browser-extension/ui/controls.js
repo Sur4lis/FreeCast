@@ -128,27 +128,67 @@ $('favoriteForm').addEventListener('submit', async event => {
   } catch (error) { if (current()) $('favoriteError').textContent = error.message.replace(/^Error invoking remote method '[^']+': Error: /, ''); }
   finally { if (request === favoriteRequest) $('favoriteSubmit').disabled = false; }
 });
-let followingRequest = 0, followingItems = [];
+let followingRequest = 0, followingItems = [], followingTruncated = false;
 const followingAvatarFallback = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="#35412e"/><text x="20" y="27" text-anchor="middle" fill="#c8f583" font-size="18">UP</text></svg>');
+function followingRoomId(value) {
+  const input = String(value ?? '').trim();
+  if (/^\d+$/.test(input)) return Number(input) || 0;
+  try { const url = new URL(input); return url.hostname === 'live.bilibili.com' && /^https?:$/.test(url.protocol) && /^\/\d+\/?$/.test(url.pathname) ? Number(url.pathname.replaceAll('/', '')) : 0; } catch { return 0; }
+}
+function isBiliFavorite(favorite) {
+  return (!favorite.platform || favorite.platform === 'bilibili') && followingRoomId(favorite.inputId || favorite.id) > 0;
+}
+function followingOwned(item) {
+  const ids = [item.id, item.roomId, item.inputId, item.shortId].map(followingRoomId).filter(Boolean);
+  return favorites.find(f => isBiliFavorite(f) && (
+    [f.id, f.inputId, f.roomId, f.shortId].some(value => ids.includes(followingRoomId(value))) ||
+    item.anchorId && f.anchorId && String(f.anchorId) === String(item.anchorId)));
+}
+function followingBusy(busy) {
+  $('importFollowing').disabled = busy;
+  $('followingRefresh').disabled = busy;
+  $('followingList').setAttribute('aria-busy', String(busy));
+}
+function clearFollowing() {
+  followingRequest++; followingItems = []; followingTruncated = false;
+  $('followingList').replaceChildren(); followingBusy(false);
+}
 function refreshFollowingStatus() {
-  const pending = followingItems.filter(item => !favorites.some(f => String(f.id) === String(item.id) || String(f.inputId) === String(item.inputId))).length;
+  const pending = followingItems.filter(item => !followingOwned(item)).length;
   $('followingStatus').textContent = !followingItems.length
     ? '没有找到正在直播的关注 UP 主'
-    : `正在直播 ${followingItems.length} 位${pending ? '，点击右侧按钮逐个收藏' : '，已全部收藏'}${favorites.length >= 100 ? '；收藏已达上限 100' : ''}`;
+    : `${followingTruncated ? '已读取前' : '正在直播'} ${followingItems.length} 位${pending ? '，点击右侧按钮收藏' : '，已全部收藏'}${followingTruncated ? '；关注较多，仅显示部分结果' : ''}${favorites.length >= 100 ? '；收藏已达上限 100' : ''}`;
 }
-function importFollowingItem(item, button) {
+async function importFollowingItem(item, button) {
   if (favorites.length >= 100) { notice('最多收藏 100 个 UP 主', true); return; }
-  if (favorites.some(f => String(f.id) === String(item.id) || String(f.inputId) === String(item.inputId))) { button.textContent = '已收藏'; button.disabled = true; return; }
-  favorites.push({...item}); renderFavorites(); save();
-  button.textContent = '已收藏'; button.disabled = true;
-  const row = button.closest('.following-item'); row?.classList.add('is-added');
-  const sub = row?.querySelector('small'); if (sub) sub.textContent = '已在收藏中';
-  refreshFollowingStatus(); notice(`已收藏 ${item.name}`);
+  const request = followingRequest;
+  const current = () => request === followingRequest && $('followingDialog').open;
+  button.disabled = true; button.textContent = '正在导入';
+  try {
+    // Older favorites may contain only a short room number or a room URL.
+    if (!followingOwned(item) && favorites.some(f => isBiliFavorite(f) && !f.roomId)) {
+      const profile = await window.live.getProfile(item.id);
+      if (!current()) return;
+      if (Number(profile.id) === Number(item.id)) Object.assign(item, {shortId: profile.shortId, anchorId: profile.anchorId || item.anchorId});
+    }
+    if (!current()) return;
+    const owned = followingOwned(item);
+    if (owned) Object.assign(owned, {roomId: item.roomId, anchorId: item.anchorId, platform: 'bilibili'});
+    else {
+      if (favorites.length >= 100) throw Error('最多收藏 100 个 UP 主');
+      favorites.push({...item});
+    }
+    renderFavorites(); save(); renderFollowing(); notice(`${owned ? '已在收藏中：' : '已收藏 '}${item.name}`);
+  } catch (error) {
+    if (!current()) return;
+    button.disabled = false; button.textContent = '导入';
+    $('followingStatus').textContent = '导入失败：' + String(error.message || error);
+  }
 }
 function renderFollowing() {
   const list = $('followingList'); list.replaceChildren();
   for (const item of followingItems) {
-    const owned = favorites.some(f => String(f.id) === String(item.id) || String(f.inputId) === String(item.inputId));
+    const owned = Boolean(followingOwned(item));
     const row = document.createElement('div'); row.className = 'following-item' + (owned ? ' is-added' : '');
     const img = document.createElement('img'); img.alt = item.name + '头像'; img.referrerPolicy = 'no-referrer';
     let url; try { url = new URL(item.avatar); } catch {}
@@ -168,8 +208,8 @@ function renderFollowing() {
 }
 async function openFollowing() {
   const request = ++followingRequest;
-  followingItems = []; $('followingList').replaceChildren();
-  $('followingStatus').textContent = '正在读取 B 站关注列表…'; $('importFollowing').disabled = true;
+  followingItems = []; followingTruncated = false; $('followingList').replaceChildren();
+  $('followingStatus').textContent = '正在读取 B 站关注列表…'; followingBusy(true);
   if (!$('followingDialog').open) $('followingDialog').showModal();
   try {
     await window.live.ensureSources(['1']);
@@ -177,15 +217,25 @@ async function openFollowing() {
     const result = await window.live.liveFollowing();
     if (request !== followingRequest || !$('followingDialog').open) return;
     followingItems = Array.isArray(result?.items) ? result.items : [];
+    followingTruncated = result?.truncated === true;
     renderFollowing();
   } catch (error) {
     if (request !== followingRequest || !$('followingDialog').open) return;
     $('followingStatus').textContent = String(error.message || error).replace(/^Error invoking remote method '[^']+': Error: /, '');
-  } finally { $('importFollowing').disabled = false; }
+  } finally { if (request === followingRequest) followingBusy(false); }
 }
 $('importFollowing').addEventListener('click', openFollowing);
-$('followingCancel').addEventListener('click', () => { followingRequest++; $('followingDialog').close(); });
-$('followingDialog').addEventListener('cancel', () => { followingRequest++; });
+$('importFollowing').hidden = typeof window.live.liveFollowing !== 'function';
+$('followingRefresh').addEventListener('click', openFollowing);
+$('followingCancel').addEventListener('click', () => { clearFollowing(); $('followingDialog').close(); });
+$('followingDialog').addEventListener('cancel', clearFollowing);
+$('followingDialog').addEventListener('close', () => { if (!$('followingDialog').open) clearFollowing(); });
+function followingAccountChanged() {
+  if (!$('followingDialog').open) return;
+  clearFollowing(); $('followingStatus').textContent = '账号已变更，请点击重新读取';
+}
+chrome.runtime.onMessage.addListener(message => { if (message.type === 'accountChanged') followingAccountChanged(); });
+window.addEventListener('freecast-account-changed', followingAccountChanged);
 window.addEventListener('beforeunload', save);
 applyMix(); renderFavorites(); selectSource(activeSource); updateView();
 const playerSizeObserver=new ResizeObserver(() => {

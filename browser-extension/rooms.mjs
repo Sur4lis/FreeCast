@@ -21,7 +21,7 @@ async function getProfile(input) {
   const anchor = await api('/live_user/v1/UserInfo/get_anchor_in_room?roomid=' + room.room_id);
   let avatar = '';
   try { const url = new URL(anchor.info?.face); if (url.hostname.endsWith('.hdslb.com')) { url.protocol = 'https:'; avatar = url.href; } } catch {}
-  return { id: room.room_id, inputId: id, name: anchor.info?.uname || `UP ${room.uid}`, avatar, title: room.title };
+  return { id: room.room_id, inputId: id, roomId: room.room_id, shortId: room.short_id || 0, anchorId: room.uid, platform: 'bilibili', name: anchor.info?.uname || `UP ${room.uid}`, avatar, title: room.title };
 }
 async function getStats(input) {
   const id=roomId(input),room=await api('/room/v1/Room/get_info?room_id='+id);

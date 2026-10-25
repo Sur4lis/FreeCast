@@ -67,6 +67,7 @@ body.editing-avoidance .player-bottom{opacity:1;pointer-events:auto}.view-full.f
 .chat-row[data-source=b] .repeat-count{color:var(--b,var(--a))}
 #danmaku .bullet-repeat-count{display:inline-block;box-sizing:content-box;vertical-align:baseline;width:5ch;margin-left:.35em;padding:0;border:0;border-radius:0;color:inherit;font-family:inherit;font-size:.8em;font-weight:700;text-align:left}
 #followingStatus{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 10px;min-height:18px}
+#importFollowing[hidden]{display:none!important}
 .following-list{display:flex;flex-direction:column;gap:6px;max-height:min(46vh,380px);overflow:auto;padding-right:2px}
 .following-list:empty{display:none}
 .following-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--soft,var(--control))}

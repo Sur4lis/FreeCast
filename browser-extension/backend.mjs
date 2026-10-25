@@ -73,23 +73,24 @@ export function createBackend({ request = fetch, cookie, cooldownStore, ensureDe
   // The live-up feed only lists followed anchors who are currently streaming.
   async function liveFollowing() {
     const items = new Map();
-    let offset = null;
+    let offset = null, truncated = false;
     for (let page = 0; page < 5; page++) {
       let data;
       try { data = (await json('https://api.bilibili.com/x/polymer/web-dynamic/v1/live-up?' + liveUpQuery(offset))).data; }
       catch (error) {
         if (/-101|未登录/.test(error.message)) throw Error('请先在 B 站官网登录，再导入关注列表');
-        if (/-352|校验/.test(error.message)) throw Error('B 站要求验证，请先在同一浏览器打开 B 站完成验证');
+        if (/-352|校验|HTTP 412|HTTP 429/.test(error.message)) throw Error('B 站要求验证或请求过于频繁，请先在同一浏览器打开 B 站完成验证，稍后重试（' + error.message + '）');
         throw error;
       }
       const before = items.size;
       for (const item of parseLiveUpItems(data)) if (!items.has(item.id)) items.set(item.id, item);
-      const next = Number(data?.offset);
+      const next = liveUpId(data?.offset);
       // Stop when the feed has no more pages, repeats an offset, or returns nothing new.
-      if (!data?.has_more || !Number.isSafeInteger(next) || next === offset || items.size === before) break;
+      if (![true, 1, '1'].includes(data?.has_more) || !next || next === offset || items.size === before) break;
       offset = next;
+      if (page === 4) truncated = true;
     }
-    return {items: [...items.values()], total: items.size};
+    return {items: [...items.values()], total: items.size, truncated};
   }
   async function status() {
     const response = await request('https://api.bilibili.com/x/web-interface/nav', { credentials: 'include', redirect: 'error', signal: AbortSignal.timeout(12000) });
