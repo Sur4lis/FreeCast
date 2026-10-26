@@ -1,0 +1,6 @@
+#superChatOverlay{--sc-scale:1;width:calc(250px * var(--sc-scale));max-width:min(calc(34% * var(--sc-scale)),calc(100% - 20px));max-height:calc(100% - 24px);font-size:calc(12px * var(--sc-scale))}
+#superChatOverlay .superchat-card{margin-bottom:calc(7px * var(--sc-scale));border-radius:calc(17px * var(--sc-scale))}
+#superChatOverlay .superchat-heading{font-size:calc(11px * var(--sc-scale));gap:calc(6px * var(--sc-scale));padding:calc(6px * var(--sc-scale)) calc(9px * var(--sc-scale)) 0}
+#superChatOverlay .superchat-avatar{width:calc(20px * var(--sc-scale));height:calc(20px * var(--sc-scale))}
+#superChatOverlay .superchat-message{font-size:calc(12px * var(--sc-scale));padding:calc(3px * var(--sc-scale)) calc(10px * var(--sc-scale)) calc(8px * var(--sc-scale))}
+@media(max-width:1100px){#superChatOverlay{width:calc(220px * var(--sc-scale));max-width:min(calc(40% * var(--sc-scale)),calc(100% - 20px))}}

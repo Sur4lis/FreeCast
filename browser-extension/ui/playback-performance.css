@@ -5,3 +5,9 @@
 .smooth-playback #chatList{contain:layout style paint}
 .smooth-playback .bullet{filter:none!important;text-shadow:1px 1px 1px #000,-1px -1px 1px #000!important}
 .smooth-playback .blg-recall,.smooth-playback .blg-pinging{animation:none!important}
+
+/* Only active during sustained fullscreen AI contention. Audio stays on the same model. */
+.ai-render-protection .view-full #danmaku{contain:layout style}
+.ai-render-protection .view-full .bullet{will-change:transform;text-shadow:1px 1px 1px #000,-1px -1px 1px #000}
+.ai-render-protection .view-full .bullet .chat-emote{filter:none}
+.ai-render-protection .view-full #miniPanel{box-shadow:none}

@@ -2,23 +2,26 @@ import * as ort from '../vendor/ort/ort.webgpu.min.mjs';
 import {Spectral,LENGTH,TRIM,CORE,F,T} from './dsp.mjs';
 import {suppressResidual} from './residual.mjs';
 import {selectStem} from './stems.mjs';
-import {assess,REALTIME_BUDGET_MS} from './performance.mjs';
+import {assess,REALTIME_BUDGET_MS,renderPasses} from './performance.mjs';
 import {requestHardwareGPU,gpuHelp} from './gpu-device.mjs';
 
 let session,spectral,provider,device='',passes=2,slowBlocks=0;
-const profile=()=>passes===2?'双次增强':'兼容推理';
+const profile=(count=passes)=>count===2?'双次增强':'兼容推理';
 ort.env.wasm.numThreads=1; // Runs inside our own worker; no UI-thread FFT or inference.
 ort.env.wasm.proxy=false;
 ort.env.wasm.wasmPaths=new URL('../vendor/ort/',import.meta.url).href;
 ort.env.logLevel='error';
-async function process(left,right,mode='game',stem='instrumental'){
+async function process(left,right,mode='game',stem='instrumental',renderPriority=false,renderPressure=false){
   const start=performance.now(),tensors=[];
+  const workPasses=renderPasses(passes,renderPriority,renderPressure);
   try{
     if(left?.length!==LENGTH||right?.length!==LENGTH)throw Error('音频块长度无效');
     const input=new ort.Tensor('float32',spectral.encode([left,right]),[1,4,F,T]);tensors.push(input);
     const output=await session.run({[session.inputNames[0]]:input});tensors.push(...Object.values(output));
     const positive=output[session.outputNames[0]].data,clean=new Float32Array(positive);
-    if(passes===2){
+    if(workPasses===2){
+      // Separate the two GPU bursts so the compositor can present a fullscreen frame.
+      if(renderPriority)await new Promise(resolve=>setTimeout(resolve,20));
       const negativeData=new Float32Array(input.data.length);
       for(let i=0;i<negativeData.length;i++)negativeData[i]=-input.data[i];
       const negativeTensor=new ort.Tensor('float32',negativeData,[1,4,F,T]);tensors.push(negativeTensor);
@@ -31,7 +34,7 @@ async function process(left,right,mode='game',stem='instrumental'){
     if(stem==='vocals')selectStem(input.data,clean,stem);
     else { suppressResidual(input.data,clean,F,T,mode); selectStem(input.data,clean,'instrumental'); }
     const [l,r]=spectral.decode(clean).map(c=>c.slice(TRIM,TRIM+CORE));
-    return {left:l,right:r,ms:performance.now()-start,profile:profile(),passes};
+    return {left:l,right:r,ms:performance.now()-start,profile:profile(workPasses),passes:workPasses,renderProtected:workPasses<passes};
   }finally{for(const tensor of tensors)tensor.dispose();}
 }
 async function init(forceCpu=false,performanceMode='auto',streams=1){
@@ -73,7 +76,7 @@ self.onmessage=async({data:message})=>{
   busy=true;
   try{
     if(message.type==='init')self.postMessage({id:message.id,...await init(message.forceCpu,message.performanceMode,message.streams)});
-    else{if(!session)throw Error('模型尚未加载');const result=await process(message.left,message.right,message.mode,message.stem);
+    else{if(!session)throw Error('模型尚未加载');const result=await process(message.left,message.right,message.mode,message.stem,message.renderPriority,message.renderPressure);
       slowBlocks=result.ms*Math.max(1,Math.min(2,message.streams||1))>REALTIME_BUDGET_MS?slowBlocks+1:0;
       if(passes===2&&slowBlocks>=2){passes=1;slowBlocks=0;result.nextProfile=profile();}
       self.postMessage({id:message.id,...result},[result.left.buffer,result.right.buffer]);}

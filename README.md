@@ -4,13 +4,20 @@
 
 ## 下载与安装
 
-[下载 v1.23.2 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.23.2/FreeCast_v1.23.2.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.23.2/FreeCast_Android_v1.23.2.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.23.2)
+[下载 v1.24 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.24/FreeCast_v1.24.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.24/FreeCast_Android_v1.24.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.24)
 
 1. 完整解压安装包。
 2. 在 Chrome / Edge 的扩展管理页开启「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的「FreeCast浏览器插件」文件夹。
 
 升级时覆盖原插件目录并刷新扩展，原有收藏和设置保留。请保留插件文件夹。
+
+## v1.24 更新（PC / 安卓）
+
+- 安卓新增后台播放，切换应用后可继续收听直播。
+- PC 部分全屏支持收起右侧弹幕列表。
+- 新增 SC 大小调节。
+- 修复全屏播放下开启 AI 人声处理异常的问题。
 
 ## v1.23.2 更新（PC / 安卓）
 
@@ -69,7 +76,7 @@ npm run pack
 
 随后可直接加载 `browser-extension/`，安装包输出到 `release/`。
 
-模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.23.2 安装包已包含这些文件，无需额外下载。
+模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.24 安装包已包含这些文件，无需额外下载。
 
 AI 在本地运行，需要硬件 WebGPU 支持。第三方库及模型来源、许可见 [第三方说明](browser-extension/第三方说明.txt)。
 

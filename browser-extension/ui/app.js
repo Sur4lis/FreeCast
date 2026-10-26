@@ -297,7 +297,7 @@ function showMessage(message, historyOnly = false) {
   if(!historyOnly)showDanmaku(message,group);
 }
 function showDanmaku(message,group){
-  if(!$('showChat').checked)return;
+  if(!$('showChat').checked||document.hidden||window.freecastBackground)return;
   const bullet = document.createElement('span'); bullet.className = message.isSelf ? 'bullet is-self' : 'bullet'; ChatContent.append(bullet, message);
   bullet.dataset.source = message.source || 'a';
   if(typeof message.color==='string'&&/^#[0-9a-f]{6}$/i.test(message.color))bullet.style.setProperty('--danmaku-native-color',message.color.toLowerCase());
@@ -323,6 +323,7 @@ function togglePause() {
   else if (!window.replay?.active) { pauseLag += (now - pauseStarted) / 1000; if (pauseLag > 90) { pauseLag = 0; clearChat(); notice('暂停超过 90 秒，已回到当前设定的直播延迟。'); } updateOffset(); }
   $('pause').textContent = paused ? '继续' : '暂停'; $('player').classList.toggle('paused', paused);
   if (gain) gain.gain.value = 0;
+  window.playbackPerformance?.refresh();
 }
 let lastPlayerUI=0;
 function tick() {

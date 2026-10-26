@@ -1,0 +1,13 @@
+#toggleChatSidebar{display:none}
+.view-theater #toggleChatSidebar:not([hidden]){display:grid;place-items:center;position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:8;width:16px;height:88px;padding:1px;border:1px solid #ffffff24;border-right:0;border-radius:10px 0 0 10px;background:#17233166;color:#ffffffe0;box-shadow:none;cursor:pointer;opacity:1;transition:opacity .28s ease,background-color .2s ease,color .2s ease}
+#toggleChatSidebar::before{content:"";position:absolute;inset:0 0 0 -10px}
+.view-theater.full-ui-idle #toggleChatSidebar{opacity:0}
+.view-theater #toggleChatSidebar:hover,.view-theater #toggleChatSidebar:focus-visible{opacity:1;background:#172331b3;color:#fff}
+.view-theater #toggleChatSidebar:focus-visible{outline:2px solid var(--a);outline-offset:-2px}
+#toggleChatSidebar svg{width:10px;height:18px;pointer-events:none}
+.chat-sidebar-collapsed #toggleChatSidebar svg{transform:rotate(180deg)}
+.view-theater.chat-sidebar-collapsed .workspace{grid-template-columns:minmax(0,1fr)}
+.view-theater.chat-sidebar-collapsed .chat-panel{display:contents}
+.view-theater.chat-sidebar-collapsed .chat-panel>:not(#miniPanel){display:none}
+.view-theater.chat-sidebar-collapsed #miniPanel:not(.enlarged){position:absolute;right:28px;bottom:88px;width:min(25vw,360px);z-index:5;margin:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media(prefers-reduced-motion:reduce){.view-theater #toggleChatSidebar:not([hidden]){transition:none}}

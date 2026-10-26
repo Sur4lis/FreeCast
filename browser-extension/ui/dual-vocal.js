@@ -21,6 +21,7 @@ const vocal = window.vocal = {
     $('filterEnable').checked=this.armed;$('filterEnable').disabled=false;
     const failed=Object.entries(this.pipes).filter(([,p])=>p.error).map(([key])=>key.toUpperCase()).join('、');
     $('filterStatus').textContent=(this.loading?'正在准备本地 AI…':this.active?this.label()+' · 音画补偿 '+this.delay+' 秒':failed?'':this.label()+(this.armed?' · 连接后自动开启':' · 已关闭'))+(failed?(this.active||this.loading?' · ':'')+failed+' 路已切回原声':'');
+    window.playbackPerformance?.refresh();
   },
   async graph(){
     if(this.graphReady)return;if(this.graphPending)return this.graphPending;

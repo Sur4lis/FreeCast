@@ -34,53 +34,53 @@
 :root body:is(.view-full,.view-theater) #player .player-bottom > button:disabled{opacity:.55}
 
 /* The existing composer moves here in fullscreen, preserving drafts and targets. */
-:root .view-full #player .player-bottom #videoStatus{display:none}
-:root .view-full #player .player-bottom #playStatus{max-width:140px;font-size:11px}
-:root .view-full #sendChatForm{
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #player .player-bottom #videoStatus{display:none}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #player .player-bottom #playStatus{max-width:140px;font-size:11px}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm{
   position:relative;display:flex;align-items:center;gap:4px;
   flex:1 1 320px;min-width:270px;max-width:420px;
   margin:0 4px;padding:3px 5px;border:1px solid #ffffff2b;border-radius:18px;
   background:#ffffff1f;color:#f8f9fc;text-shadow:none;
 }
-:root .view-full #sendChatForm:focus-within{background:#18202edb;border-color:#ffffff70}
-:root .view-full #sendChatForm > label{flex:0 0 80px;min-width:0;gap:0;margin:0}
-:root .view-full #sendChatForm .send-target-label{display:none}
-:root .view-full #sendTarget{
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm:focus-within{background:#18202edb;border-color:#ffffff70}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm > label{flex:0 0 80px;min-width:0;gap:0;margin:0}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm .send-target-label{display:none}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendTarget{
   width:100%;max-width:100%;min-width:0;flex:1;
   background:transparent;color:#f8f9fc;border:0;border-right:1px solid #ffffff30;
   border-radius:0;padding:3px;font-size:11px;text-overflow:ellipsis;
 }
-:root .view-full #sendTarget option{background:#20252e;color:#f8f9fc}
-:root .view-full #sendChatForm .compose-row{flex:1;min-width:0;margin:0;gap:3px;align-items:center}
-:root .view-full #sendChatForm #chatText{
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendTarget option{background:#20252e;color:#f8f9fc}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm .compose-row{flex:1;min-width:0;margin:0;gap:3px;align-items:center}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm #chatText{
   min-width:40px;height:27px;padding:3px 4px;border:0;border-radius:3px;
   background:transparent;color:#fff;font-size:12px;line-height:21px;box-shadow:none;
 }
-:root .view-full #sendChatForm #chatText::placeholder{color:#eceff5;opacity:1}
-:root .view-full #sendChatForm #chatText:focus-visible{outline:0}
-:root .view-full #sendChatForm #emoteButton{height:27px;min-width:25px;padding:0 3px!important;background:transparent;color:#fff;border:0}
-:root .view-full #sendChatForm #sendChat{
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm #chatText::placeholder{color:#eceff5;opacity:1}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm #chatText:focus-visible{outline:0}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm #emoteButton{height:27px;min-width:25px;padding:0 3px!important;background:transparent;color:#fff;border:0}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm #sendChat{
   height:27px;padding:3px 11px;border:0;border-radius:14px;line-height:21px;font-size:12px;
   background:var(--overlay-accent);color:#10202b;text-shadow:none;white-space:nowrap;
 }
-:root .view-full #sendChatForm #sendChat:disabled{background:#ffffff26;color:#d9dfe8;opacity:1}
-:root .view-full #sendChatForm #sendChat:not(:disabled):hover{filter:brightness(1.13)}
-:root .view-full #sendStatus:not(:empty){
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm #sendChat:disabled{background:#ffffff26;color:#d9dfe8;opacity:1}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm #sendChat:not(:disabled):hover{filter:brightness(1.13)}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendStatus:not(:empty){
   position:absolute;left:0;bottom:calc(100% + 9px);width:max-content;max-width:min(420px,80vw);
   min-height:0;margin:0;padding:7px 10px;border:1px solid #ffffff24;border-radius:9px;
   background:#161d29f2;color:#f4f6fa;font-size:11px;line-height:1.5;box-shadow:0 3px 15px #0003;
 }
-:root .view-full #sendStatus button{background:#ffffff20;color:#fff;border-color:#ffffff36}
-:root .view-full #emotePicker{bottom:calc(100% + 10px);text-shadow:none;color-scheme:normal}
-:root .view-full #sendChatForm:has(#emotePicker:not([hidden])) #sendStatus{display:none}
-:root .view-full #emotePicker :is(button,small){text-shadow:none}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendStatus button{background:#ffffff20;color:#fff;border-color:#ffffff36}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #emotePicker{bottom:calc(100% + 10px);text-shadow:none;color-scheme:normal}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm:has(#emotePicker:not([hidden])) #sendStatus{display:none}
+:root :is(.view-full,.view-theater.chat-sidebar-collapsed) #emotePicker :is(button,small){text-shadow:none}
 @media(max-width:1350px){
-  :root .view-full #player .player-bottom #playStatus{max-width:105px}
-  :root .view-full #sendChatForm{flex-basis:290px;max-width:350px}
+  :root :is(.view-full,.view-theater.chat-sidebar-collapsed) #player .player-bottom #playStatus{max-width:105px}
+  :root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm{flex-basis:290px;max-width:350px}
   :root body:is(.view-full,.view-theater) #player .player-bottom #videoStatus{display:none}
   :root body:is(.view-full,.view-theater) #player .player-bottom .player-actions{gap:3px}
 }
 @media(max-width:1050px){
-  :root .view-full #player .player-bottom .player-actions{flex:1 1 100%;justify-content:flex-end}
-  :root .view-full #sendChatForm{flex:1;max-width:480px}
+  :root :is(.view-full,.view-theater.chat-sidebar-collapsed) #player .player-bottom .player-actions{flex:1 1 100%;justify-content:flex-end}
+  :root :is(.view-full,.view-theater.chat-sidebar-collapsed) #sendChatForm{flex:1;max-width:480px}
 }

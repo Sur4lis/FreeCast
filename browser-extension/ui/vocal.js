@@ -68,7 +68,7 @@ const vocalTemplate = {
       const anchor=this.anchors.findLast(a=>a.time<=time)||this.anchors[0];
       if(!anchor)throw Error('音频时钟未就绪');
       const mediaStart=anchor.media+(time-anchor.time);
-      const result=await window.live.vocalProcess({left,right,mode:this.strategy,stem:this.stem,streams:vocal.selectedCount()});
+      const result=await window.live.vocalProcess({left,right,mode:this.strategy,stem:this.stem,streams:vocal.selectedCount(),...window.playbackPerformance?.aiScheduling?.()});
       if(!this.active||epoch!==this.epoch)return;
       const when=time+this.delay;
       if(when+this.core/this.rate<this.ctx.currentTime+.03)throw Error('处理超过时间预算，无法保持同步');
@@ -76,7 +76,7 @@ const vocalTemplate = {
       this.schedule([left.slice(this.trim,this.trim+this.core),right.slice(this.trim,this.trim+this.core)],when,this.dry);
       this.firstSound=Math.min(this.firstSound,when);
       this.timeline.push({when,mediaStart,end:when+this.core/this.rate});
-      this.profile=result.nextProfile||result.profile||this.profile;
+      this.profile=result.nextProfile||result.profile||this.profile;this.renderProtected=result.renderProtected===true;
       this.lastMs=result.ms;this.lastHealthyAt=performance.now();vocal.controls();
     }catch(error){if(epoch===this.epoch)this.fail(error);}finally{this.inflight=false;if(this.active)this.pump();}
   },

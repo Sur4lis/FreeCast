@@ -80,6 +80,7 @@ function updateView() {
   $('theater').textContent = viewMode === 'theater' ? '退出部分全屏' : '部分全屏';
   $('fullscreen').setAttribute('aria-pressed', String(viewMode === 'full'));
   $('theater').setAttribute('aria-pressed', String(viewMode === 'theater'));
+  window.playbackPerformance?.refresh();
 }
 let beforeFull = 'normal';
 async function setView(next) {

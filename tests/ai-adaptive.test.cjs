@@ -4,6 +4,7 @@ async function harness(runMs){
  class Tensor{constructor(type,data){this.data=data;}dispose(){}}
  const session={inputNames:['in'],outputNames:['out'],async run(){runs++;clock+=cost;return{out:new Tensor('float32',new Float32Array(16))}},async release(){}};
  const scope={...policy,ort:{env:{wasm:{},webgpu:{}},Tensor,InferenceSession:{create:async()=>session}},Spectral:class{encode(){return new Float32Array(16)}decode(){return[new Float32Array(2),new Float32Array(2)]}},LENGTH:2,TRIM:0,CORE:2,F:2,T:2,suppressResidual:()=>{},performance:{now:()=>clock},URL,Float32Array,Uint8Array,ArrayBuffer,navigator:{gpu:{requestAdapter:async()=>({info:{vendor:'test-gpu',architecture:'test'}})}},crypto:{subtle:{digest:async()=>new Uint8Array(32).buffer}},fetch:async()=>({json:async()=>({file:'model.onnx',sha256:'00'.repeat(32)}),arrayBuffer:async()=>new ArrayBuffer(1)}),self:{postMessage:m=>replies.push(m)}};
+ scope.setTimeout=fn=>{clock+=20;fn();};
  const source=fs.readFileSync('browser-extension/ai/worker.mjs','utf8').replace(/^import .*;\r?\n/gm,'').replaceAll('import.meta.url',"'https://local.test/ai/worker.mjs'");vm.runInNewContext(source,scope);
  return{send:async data=>{await scope.self.onmessage({data});return replies.at(-1)},runs:()=>runs,setCost:n=>cost=n};
 }
@@ -20,4 +21,13 @@ test('compatibility mode is selectable and genuinely non-real-time hardware is r
 test('dual-source benchmark accounts for both streams before accepting enhanced inference',async()=>{
  const h=await harness(1400),info=await h.send({id:1,type:'init',streams:2});assert.equal(info.realtime,true);assert.equal(info.passes,1);assert.equal(info.blockMs,2800);
  const overloaded=await harness(2700),failure=await overloaded.send({id:1,type:'init',streams:2});assert.match(failure.error,/GPU 实测仍跟不上直播/);
+});
+
+test('fullscreen render pressure uses one complete pass, restores enhancement on exit, and preserves explicit compatibility mode',async()=>{
+ const h=await harness(400);await h.send({id:1,type:'init'});
+ const input={type:'process',left:new Float32Array(2),right:new Float32Array(2)};
+ const protectedBlock=await h.send({id:2,...input,renderPriority:true,renderPressure:true});assert.equal(protectedBlock.passes,1);assert.equal(protectedBlock.renderProtected,true);assert.equal(protectedBlock.left.length,2);
+ const recovered=await h.send({id:3,...input,renderPriority:false,renderPressure:true});assert.equal(recovered.passes,2);assert.equal(recovered.renderProtected,false);
+ const spaced=await h.send({id:4,...input,renderPriority:true,renderPressure:false});assert.equal(spaced.passes,2);assert.equal(spaced.ms,820);
+ const compatible=await harness(400);await compatible.send({id:1,type:'init',performanceMode:'compatible'});assert.equal((await compatible.send({id:2,...input})).passes,1);
 });
