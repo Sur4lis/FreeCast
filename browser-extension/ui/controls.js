@@ -93,6 +93,10 @@ async function setView(next) {
 }
 $('fullscreen').addEventListener('click', () => setView(viewMode === 'full' ? beforeFull : 'full'));
 $('theater').addEventListener('click', () => setView(viewMode === 'theater' ? 'normal' : 'theater'));
+$('player').addEventListener('dblclick', event => { 
+  if (!event.target.closest('#mainSlot')) return; 
+  setView(viewMode === 'full' ? beforeFull : 'full'); 
+});
 window.live.onFullscreenLeft(() => { if (viewMode === 'full') { viewMode = beforeFull; updateView(); } });
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !event.defaultPrevented && !event.isComposing && !document.querySelector('dialog[open]')) { if ($('miniPanel').classList.contains('enlarged')) setMiniZoom(false); else if (viewMode !== 'normal') setView(viewMode === 'full' ? beforeFull : 'normal'); } });
 for (const key of ['audioA', 'audioB', 'videoA', 'videoB']) $(key.replace(/(A|B)$/, 'Toggle$1')).addEventListener('change', event => { mix[key] = event.target.checked; applyMix(); save(); });
