@@ -1,0 +1,1624 @@
+{
+  "schemaVersion": 1,
+  "sampleRate": 4,
+  "toleranceSeconds": 0.35,
+  "description": "Offline worker regression: 24 local-video cases and 16 generated clocks. Video assets are not distributed with the repository. Expected success for the rough-border stress case is retained.",
+  "assets": {
+    "bp-a.mp4": {
+      "sha256": "e3258f349c47341c80d50cb7d269038a240b958938535f527bf8e0042d648e28",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "minimumDurationSeconds": 290
+    },
+    "bp-b.mp4": {
+      "sha256": "56bcafbaf60f5db0a61aee1ae05f6185323dc58006dc36affd2aaefd0d2ead45",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "minimumDurationSeconds": 270
+    },
+    "a-strip-master.mp4": {
+      "sha256": "b05a4a73cedfbd174b3fc04ef062b6178337fee57838ca5df118197ded6a13d5",
+      "dimensions": [
+        852,
+        480
+      ],
+      "minimumDurationSeconds": 45
+    },
+    "official-master.mp4": {
+      "sha256": "9ea9071ce3e6afc471097fb883760587ee9dee6390e0b16d69e07ebc18c27218",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "minimumDurationSeconds": 45
+    },
+    "a-clock-master.mp4": {
+      "sha256": "b85440c5cd4b5c8b335b24fbf0fdd4561f93d165893a8ef0f5a3524e2b8ac88c",
+      "dimensions": [
+        852,
+        480
+      ],
+      "minimumDurationSeconds": 45
+    },
+    "other-match.mp4": {
+      "sha256": "d18c59c01465998c7d05b98fbeea8bd098844221ee34fb987444225cfd5a51d7",
+      "dimensions": [
+        852,
+        480
+      ],
+      "minimumDurationSeconds": 37
+    },
+    "no-official-picture.mkv": {
+      "sha256": "f1ba3705d995165e3ba7e82cfd7c45d9e51bc9570190f858ec7a19bf14babec4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "minimumDurationSeconds": 240
+    }
+  },
+  "cases": [
+    {
+      "name": "real-bp-exact",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          654,
+          118,
+          190,
+          49
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          800,
+          28,
+          320,
+          82
+        ],
+        "start": 140,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -2.5
+    },
+    {
+      "name": "real-bp-x80",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          654,
+          118,
+          190,
+          49
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          864,
+          28,
+          320,
+          82
+        ],
+        "start": 140,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -2.5,
+      "nominalCommonAreaFraction": 0.8
+    },
+    {
+      "name": "real-bp-y80",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          654,
+          118,
+          190,
+          49
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          800,
+          44,
+          320,
+          82
+        ],
+        "start": 140,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -2.5,
+      "nominalCommonAreaFraction": 0.8048780487804879
+    },
+    {
+      "name": "real-bp-xy81",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          654,
+          118,
+          190,
+          49
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          832,
+          36,
+          320,
+          82
+        ],
+        "start": 140,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -2.5,
+      "nominalCommonAreaFraction": 0.8121951219512196
+    },
+    {
+      "name": "real-bp-size110",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          654,
+          118,
+          190,
+          49
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          784,
+          24,
+          352,
+          90
+        ],
+        "start": 140,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -2.5,
+      "nominalCommonAreaFraction": 0.8282828282828283
+    },
+    {
+      "name": "real-bp-both-rough",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          645,
+          115,
+          210,
+          55
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          816,
+          20,
+          336,
+          90
+        ],
+        "start": 140,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -2.5,
+      "note": "Both selections enlarged and offset asymmetrically; non-official border outside A is intentional.",
+      "knownFailure": "Selections include non-official client borders outside A. No match is currently found; the desired outcome remains a match."
+    },
+    {
+      "name": "strip-dual-behind",
+      "mode": "dual",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "a": {
+        "file": "a-strip-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          274,
+          21,
+          204,
+          52
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          748,
+          18,
+          424,
+          108
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "clock-dual-behind",
+      "mode": "dual",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          928,
+          74,
+          64,
+          30
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "clock-dual-static",
+      "mode": "dual",
+      "expectMatch": false,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          928,
+          74,
+          64,
+          30
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      },
+      "static": true
+    },
+    {
+      "name": "clock-dual-repeating",
+      "mode": "dual",
+      "expectMatch": false,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          928,
+          74,
+          64,
+          30
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      },
+      "repeatSeconds": 2
+    },
+    {
+      "name": "clock-dual-other-match",
+      "mode": "dual",
+      "expectMatch": false,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "other-match.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          413,
+          32,
+          30,
+          11
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "scoreboard-x80",
+      "mode": "dual",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "a": {
+        "file": "a-strip-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          274,
+          21,
+          204,
+          52
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          833,
+          18,
+          424,
+          108
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 200
+      },
+      "nominalCommonAreaFraction": 0.7995283018867925
+    },
+    {
+      "name": "scoreboard-y80",
+      "mode": "dual",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "a": {
+        "file": "a-strip-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          274,
+          21,
+          204,
+          52
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          748,
+          40,
+          424,
+          108
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 200
+      },
+      "nominalCommonAreaFraction": 0.7962962962962963
+    },
+    {
+      "name": "scoreboard-size110",
+      "mode": "dual",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "a": {
+        "file": "a-strip-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          274,
+          21,
+          204,
+          52
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          727,
+          13,
+          466,
+          118
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 200
+      },
+      "nominalCommonAreaFraction": 0.8327635120389904
+    },
+    {
+      "name": "real-no-official-picture",
+      "mode": "dual",
+      "a": {
+        "file": "no-official-picture.mkv",
+        "roi": [
+          654,
+          118,
+          190,
+          49
+        ],
+        "start": 150,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          800,
+          28,
+          320,
+          82
+        ],
+        "start": 150,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": false
+    },
+    {
+      "name": "synthetic-clock-exact-minute1",
+      "mode": "dual",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-exact-minute4",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 4,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-exact-minute7",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 7,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute1",
+      "mode": "dual",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute4",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 4,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute7",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 7,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-exact-minute1-vs-0",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 0,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-exact-minute8-vs-3",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 3,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-exact-minute3-vs-8",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 3,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-exact-minute0-vs-8",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 0,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-exact-minute8-vs-0",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 0,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute1-vs-0",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 1,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 0,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute8-vs-3",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 3,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute3-vs-8",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 3,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute0-vs-8",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 0,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "synthetic-clock-x80-minute8-vs-0",
+      "mode": "dual",
+      "expectMatch": false,
+      "expectedOffset": null,
+      "note": "Synthetic seven-segment clock; whole minutes remain within common intersection. All real-video cases are separate.",
+      "a": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          0,
+          0,
+          192,
+          64
+        ],
+        "start": 0,
+        "duration": 40,
+        "minute": 8,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "synthetic": "clock",
+        "dimensions": [
+          232,
+          64
+        ],
+        "roi": [
+          38,
+          0,
+          192,
+          64
+        ],
+        "start": 8,
+        "duration": 40,
+        "minute": 0,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "real-bp-exact-long-lag",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          654,
+          118,
+          190,
+          49
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          800,
+          28,
+          320,
+          82
+        ],
+        "start": 180,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -42.5
+    },
+    {
+      "name": "strip-single-behind",
+      "mode": "single",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "a": {
+        "file": "a-strip-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          274,
+          21,
+          204,
+          52
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          748,
+          18,
+          424,
+          108
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "strip-single-ahead",
+      "mode": "single",
+      "expectMatch": true,
+      "expectedOffset": 8,
+      "a": {
+        "file": "a-strip-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          274,
+          21,
+          204,
+          52
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          748,
+          18,
+          424,
+          108
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "clock-single-behind",
+      "mode": "single",
+      "expectMatch": true,
+      "expectedOffset": -8,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          928,
+          74,
+          64,
+          30
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "clock-single-ahead",
+      "mode": "single",
+      "expectMatch": true,
+      "expectedOffset": 8,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 8,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          928,
+          74,
+          64,
+          30
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "clock-single-static",
+      "mode": "single",
+      "expectMatch": false,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          928,
+          74,
+          64,
+          30
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      },
+      "static": true
+    },
+    {
+      "name": "clock-single-repeating",
+      "mode": "single",
+      "expectMatch": false,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "official-master.mp4",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "roi": [
+          928,
+          74,
+          64,
+          30
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      },
+      "repeatSeconds": 2
+    },
+    {
+      "name": "clock-single-other-match",
+      "mode": "single",
+      "expectMatch": false,
+      "a": {
+        "file": "a-clock-master.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          359,
+          48,
+          46,
+          22
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 1000
+      },
+      "b": {
+        "file": "other-match.mp4",
+        "dimensions": [
+          852,
+          480
+        ],
+        "roi": [
+          413,
+          32,
+          30,
+          11
+        ],
+        "start": 0,
+        "duration": 37,
+        "mediaOrigin": 200
+      }
+    },
+    {
+      "name": "real-bp-both-inner80",
+      "mode": "dual",
+      "a": {
+        "file": "bp-a.mp4",
+        "roi": [
+          654,
+          118,
+          160,
+          49
+        ],
+        "start": 200,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "b": {
+        "file": "bp-b.mp4",
+        "roi": [
+          854,
+          28,
+          266,
+          82
+        ],
+        "start": 140,
+        "duration": 90,
+        "dimensions": [
+          1920,
+          1080
+        ]
+      },
+      "expectMatch": true,
+      "expectedOffset": -2.5,
+      "nominalCommonAreaFraction": 0.799609375,
+      "note": "Both selections differ in width and horizontal coverage but remain within the official picture; nominal shared widths are 80.0% of A and 81.0% of B, without foreign client borders."
+    }
+  ]
+}

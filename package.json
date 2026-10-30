@@ -8,7 +8,8 @@
   "scripts": {
     "prepare:assets": "node scripts/prepare-assets.cjs",
     "test": "node --test tests/*.test.cjs",
-    "pack": "node scripts/pack.cjs"
+    "pack": "node scripts/pack.cjs",
+    "test:visual-sync": "node scripts/test-visual-sync.cjs"
   },
   "devDependencies": {
     "adm-zip": "0.5.16"
