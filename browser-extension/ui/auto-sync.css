@@ -1,0 +1,50 @@
+.auto-sync { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.auto-sync-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; color: var(--muted); font-size: 12px; }
+.auto-sync-mode select { max-width: 100%; padding: 6px 8px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 5px; }
+.auto-sync-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.auto-sync-actions button { padding: 6px 10px; font-size: 12px; }
+#autoSyncStart { border-color: var(--a); }
+#autoSyncStatus { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+#autoSyncDialog { width: min(1440px, calc(100vw - 24px)); max-width: none; height: calc(100vh - 24px); max-height: calc(100vh - 24px); overflow: hidden; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+#autoSyncDialog[open] { display: flex; flex-direction: column; }
+#autoSyncDialog > :not(.sync-region-grid) { flex-shrink: 0; }
+#autoSyncDialog h2 { margin: 0 0 12px; }
+#autoSyncDialog::backdrop { background: #0009; }
+#autoSyncDialog p { color: var(--muted); font-size: 13px; }
+.sync-region-grid { display: grid; flex: 1; min-height: 0; align-items: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; overflow: auto; overscroll-behavior: contain; }
+#autoSyncDialog[data-region-focus="a"] .sync-region-grid, #autoSyncDialog[data-region-focus="b"] .sync-region-grid { grid-template-columns: minmax(0, 1fr); }
+#autoSyncDialog[data-region-focus="a"] [data-region-key="b"], #autoSyncDialog[data-region-focus="b"] [data-region-key="a"] { display: none; }
+#autoSyncDialog[data-region-focus="a"] #autoSyncHelp, #autoSyncDialog[data-region-focus="b"] #autoSyncHelp { display: none; }
+.sync-region-grid fieldset { min-width: 0; margin: 0; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
+.sync-region-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0 10px; }
+.sync-region-toolbar button { padding: 7px 12px; }
+.sync-region-toolbar label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.sync-region-toolbar select { max-width: 100%; padding: 6px 8px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 5px; }
+.sync-region-viewport { width: 100%; max-height: 55vh; overflow: auto; overscroll-behavior: contain; background: #000; border-radius: 4px; }
+.sync-region-surface { width: 100%; min-width: 100%; max-width: none; position: relative; touch-action: none; cursor: crosshair; background: #000; user-select: none; }
+.sync-region-surface:focus-visible { outline: 2px solid var(--a); outline-offset: -2px; }
+.sync-region-surface[aria-disabled="true"] { cursor: default; }
+.sync-region-surface canvas { display: block; width: 100%; max-width: none; height: auto; }
+.sync-region-selection { position: absolute; border: 2px solid #baff69; background: #baff691a; pointer-events: auto; cursor: move; }
+.sync-region-selection [data-handle] { position: absolute; width: 22px; height: 22px; transform: translate(-50%, -50%); touch-action: none; }
+.sync-region-selection [data-handle]::after { content: ""; position: absolute; inset: 6px; border: 1px solid #182b0c; border-radius: 2px; background: #baff69; }
+.sync-region-selection [data-handle="nw"] { left: 0; top: 0; cursor: nwse-resize; }
+.sync-region-selection [data-handle="n"] { left: 50%; top: 0; cursor: ns-resize; }
+.sync-region-selection [data-handle="ne"] { left: 100%; top: 0; cursor: nesw-resize; }
+.sync-region-selection [data-handle="e"] { left: 100%; top: 50%; cursor: ew-resize; }
+.sync-region-selection [data-handle="se"] { left: 100%; top: 100%; cursor: nwse-resize; }
+.sync-region-selection [data-handle="s"] { left: 50%; top: 100%; cursor: ns-resize; }
+.sync-region-selection [data-handle="sw"] { left: 0; top: 100%; cursor: nesw-resize; }
+.sync-region-selection [data-handle="w"] { left: 0; top: 50%; cursor: ew-resize; }
+.sync-region-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.sync-region-fields label { font-size: 11px; color: var(--muted); }
+.sync-region-fields input { display: block; width: 100%; margin-top: 4px; padding: 5px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+.sync-region-size { display: block; margin-top: 8px; color: var(--muted); font-size: 11px; }
+.sync-region-detail { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; min-height: 56px; padding: 8px; overflow: hidden; background: #0004; border-radius: 5px; }
+.sync-region-detail span { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
+.sync-region-detail canvas { display: block; max-width: calc(100% - 60px); max-height: 100px; width: auto; height: auto; image-rendering: pixelated; }
+#autoSyncDialog [hidden] { display: none !important; }
+#syncRegionNotice:empty { display: none; }
+.sync-region-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); background: var(--bg); }
+@media (max-width: 700px) { .sync-region-grid { grid-template-columns: 1fr; gap: 12px; } #autoSyncDialog { padding: 14px; } .sync-region-actions button { flex: 1 1 auto; } }
+@media (max-height: 600px) { #autoSyncDialog { padding: 12px; } #autoSyncDialog p { margin: 6px 0; } #autoSyncDialog h2 { margin-bottom: 6px; } .sync-region-actions { margin-top: 8px; padding-top: 8px; } }

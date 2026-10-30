@@ -35,6 +35,7 @@
     },
     seek(lag){
       const value=ReplayCore.nearest(lag,this.available());if(value===null){notice('两路回看缓存尚未就绪');return false;}
+      window.autoSync?.invalidate('回看位置已改变，请回到直播后重新自动对齐。');
       if(lag<.25){this.live();return true;}
       const target=this.targets();this.active=true;pauseLag=0;anchor={};
       for(const k of keys){const media=channels[k].media;anchor[k]=target[k]-value;media.currentTime=anchor[k];media.playbackRate=this.rate;}
