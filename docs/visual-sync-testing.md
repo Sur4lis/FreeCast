@@ -9,6 +9,8 @@ node scripts/test-visual-sync.cjs
 
 第二条命令生成 16 组时钟片段，不需要 FFmpeg 或外部素材。报告默认写入 `.cache/visual-sync/report.json`。它们覆盖精确框选、水平约 80% 共同区域、相同秒数但分钟不同（包含 `0/8`、`3/8`、`1/7` 等易混淆数字）的负例。
 
+`npm test` 另含 18 组生产 Worker 边缘回归：完整的一像素分钟笔画、静态标记、轻纹理背景上的半透明分钟，以及同分钟正例。不同分钟必须拒绝，不能因丢弃边缘或逐行亮度归一化而误判；相同分钟贴边仍需恢复正确时间差。
+
 ## 录像用例入口
 
 完整 manifest 是 [`tests/fixtures/visual-sync-cases.json`](../tests/fixtures/visual-sync-cases.json)。录像文件不随代码分发；该 manifest 对应一组特定开发素材，记录文件身份的 SHA-256、裁剪范围和人工核对的时间差。不能把其他录像改成相同文件名就重现这些结果。

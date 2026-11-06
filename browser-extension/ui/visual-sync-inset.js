@@ -198,17 +198,33 @@
     }
     const contrast = registered ? { originalPixels, contrastAdjustedPixels: originalPixels - count } : {};
     const translation = { x: shift.x, y: shift.y };
-    if (count >= 12) return { consistent: false, pixels: count, component: null, translation, ...contrast };
+    // Describe unexplained pixels before component traversal consumes the mask.
+    // This is diagnostic only: a border stroke remains mandatory evidence.
+    let left = SW, top = SH, right = -1, bottom = -1;
+    for (let i = 0; i < SN; i++) if (residual[i]) {
+      const x = i % SW, y = floor(i / SW);
+      left = min(left, x); right = max(right, x); top = min(top, y); bottom = max(bottom, y);
+    }
+    const boundaryEdges = [];
+    if (count) {
+      if (right < rx + 1 + Math.ceil(limitX)) boundaryEdges.push('left');
+      if (left >= SW - rx - 1 - Math.ceil(limitX)) boundaryEdges.push('right');
+      if (bottom < ry + 1 + Math.ceil(limitY)) boundaryEdges.push('top');
+      if (top >= SH - ry - 1 - Math.ceil(limitY)) boundaryEdges.push('bottom');
+    }
+    const residualBounds = count ? { x: left / SW, y: top / SH, w: (right - left + 1) / SW, h: (bottom - top + 1) / SH } : null;
+    const location = { residualBounds, boundaryEdges };
+    if (count >= 12) return { consistent: false, pixels: count, component: null, translation, ...contrast, ...location };
     let largest = 0;
     for (let i = 0; i < SN; i++) if (residual[i]) {
       const stack = [i]; residual[i] = 0; let size = 0;
       while (stack.length) {
-        const j = stack.pop(); if (++size >= 4) return { consistent: false, pixels: count, component: size, translation, ...contrast };
+        const j = stack.pop(); if (++size >= 4) return { consistent: false, pixels: count, component: size, translation, ...contrast, ...location };
         for (const k of [j - SW, j + SW, j - 1, j + 1]) if (k >= 0 && k < SN && residual[k]) { residual[k] = 0; stack.push(k); }
       }
       largest = max(largest, size);
     }
-    return { consistent: true, pixels: count, component: largest, translation, ...contrast };
+    return { consistent: true, pixels: count, component: largest, translation, ...contrast, ...location };
   }
   function candidate(a, b, lag, mask, trimBoundaries = false) {
     const end = Math.min(a.at(-1).at, b.at(-1).at + lag), start = Math.max(a[0].at, b[0].at + lag);

@@ -182,7 +182,12 @@
         ambiguous: '有多个相似位置，继续收集画面确认…',
         match: '已找到一致画面，正在复核时间差…'
       };
-      say(messages[data.result.status] || messages.collecting);
+      const detail = data.result.diagnostic?.refinedBestFixedStructure?.detail;
+      const boundaryMismatch = data.result.status === 'unmatched' && data.result.score >= .90
+        && data.result.diagnostic?.refinedBestContext >= .94 && detail?.consistent === false && detail.boundaryEdges?.length;
+      say(boundaryMismatch
+        ? '两路选区边缘的文字或图形不一致；请保留完整字形，取消后重新框选。'
+        : messages[data.result.status] || messages.collecting);
     };
     for (const key of keys) {
       const m = current.channels[key].media;

@@ -141,8 +141,9 @@
   }
 
   // Matching establishes mediaA = mediaB + mediaDelta for the SAME scene.
-  // The existing player seeks to edge - delay, so offset = edgeA-edgeB-mediaDelta.
-  // Subtracting media.currentTime across independent streams would be incorrect.
+  // Offline helpers model equal baseline delays and zero existing offset,
+  // giving offset = edgeA-edgeB-mediaDelta. The v1.24 controller instead uses
+  // offset + currentA-currentB-mediaDelta and explicitly anchors both clocks.
   function targetOffset(edgeA, edgeB, mediaDelta) {
     if (![edgeA, edgeB, mediaDelta].every(Number.isFinite)) return null;
     const value = Math.round((edgeA - edgeB - mediaDelta) * 10) / 10;

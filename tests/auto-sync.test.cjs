@@ -446,3 +446,20 @@ for (const geometryEvent of ['located', 'registered']) test(`${geometryEvent} re
   t.result(20); assert.deepEqual(t.applied, []);
   t.result(22); t.result(24); assert.deepEqual(t.applied, [-6]);
 });
+
+
+test('strong edge differences explain a refusal without applying or carrying over a pending match', () => {
+  const t = setup(); t.$('autoSyncStart').fire('click'); t.result(10); t.result(12);
+  const refusal = { status: 'unmatched', score: .99, diagnostic: {
+    refinedBestContext: .98,
+    refinedBestFixedStructure: { consistent: false, detail: { consistent: false, boundaryEdges: ['top'] } }
+  } };
+  t.workers[0].onmessage({ data: { type: 'result', at: 14, result: refusal } });
+  assert.match(t.$('autoSyncStatus').textContent, /选区边缘.*完整字形/);
+  t.result(16);
+  assert.deepEqual(t.applied, []); assert.equal(t.context.offset, 5);
+  refusal.diagnostic.refinedBestContext = .7;
+  t.workers[0].onmessage({ data: { type: 'result', at: 18, result: refusal } });
+  assert.doesNotMatch(t.$('autoSyncStatus').textContent, /选区边缘/);
+  assert.deepEqual(t.applied, []);
+});
