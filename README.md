@@ -4,13 +4,22 @@
 
 ## 下载与安装
 
-[下载 v1.24 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.24/FreeCast_v1.24.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.24/FreeCast_Android_v1.24.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.24)
+[下载 v1.25 插件](https://github.com/Sur4lis/FreeCast/releases/download/v1.25/FreeCast_v1.25.zip) · [安卓 APK](https://github.com/Sur4lis/FreeCast/releases/download/v1.25/FreeCast_Android_v1.25.apk) · [更新说明](https://github.com/Sur4lis/FreeCast/releases/tag/v1.25)
 
 1. 完整解压安装包。
 2. 在 Chrome / Edge 的扩展管理页开启「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的「FreeCast浏览器插件」文件夹。
 
 升级时覆盖原插件目录并刷新扩展，原有收藏和设置保留。请保留插件文件夹。
+
+## v1.25 更新（PC / 安卓）
+
+- PC 新增主画面双击进入、退出全屏。（感谢 [@Gelord39](https://github.com/Gelord39)，PR [#17](https://github.com/Sur4lis/FreeCast/pull/17)）
+- PC 新增画面自动对齐，通过框选共同画面校准两路延迟。（感谢 [@tyxkk2](https://github.com/tyxkk2)，PR [#20](https://github.com/Sur4lis/FreeCast/pull/20)）
+- 优化安卓界面布局与操作体验。
+- 优化 SC 样式。
+- 支持关闭单条 SC：安卓左滑关闭，PC 点击后选择关闭。
+- 点击用户昵称，可选择“屏蔽用户”或“屏蔽弹幕”，后者将该条内容加入关键词屏蔽。
 
 ## v1.24 更新（PC / 安卓）
 
@@ -76,7 +85,7 @@ npm run pack
 
 随后可直接加载 `browser-extension/`，安装包输出到 `release/`。
 
-模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。v1.24 安装包已包含这些文件，无需额外下载。
+模型和 WASM 不放入 Git 历史；准备命令从已发布的 v1.10 安装包提取相同依赖，并校验 SHA-256。发布的插件安装包已包含这些文件，无需额外下载。
 
 AI 在本地运行，需要硬件 WebGPU 支持。第三方库及模型来源、许可见 [第三方说明](browser-extension/第三方说明.txt)。
 
