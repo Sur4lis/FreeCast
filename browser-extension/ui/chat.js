@@ -43,8 +43,10 @@
     if(cmd==='SUPER_CHAT_MESSAGE'){
       const id=String(data.id??'');if(!/^[\w-]{1,80}$/.test(id))return null;
       const price=Number(data.price),duration=Number(data.time)||Number(data.end_time)-Number(data.start_time);
-      const color=data.background_bottom_color||data.background_color;
-      return {type:'superchat',id,text:String(data.message||'').slice(0,2000),user:String(data.user_info?.uname||'观众').slice(0,100),uid:String(data.uid||data.user_info?.uid||''),avatar:imageUrl(data.user_info?.face),scColor:/^#[0-9a-f]{6}$/i.test(color||'')?color:undefined,price:Number.isFinite(price)&&price>=0?Math.min(price,10000000):0,duration:Number.isFinite(duration)&&duration>0?Math.min(7200,duration):60,receivedAt};
+      const color=value=>/^#[0-9a-f]{6}$/i.test(value||'')?value:undefined;
+      return {type:'superchat',id,text:String(data.message||'').slice(0,2000),user:String(data.user_info?.uname||'观众').slice(0,100),uid:String(data.uid||data.user_info?.uid||''),avatar:imageUrl(data.user_info?.face),
+        scColor:color(data.background_bottom_color)||color(data.background_color),scHeaderColor:color(data.background_color),scPriceColor:color(data.background_price_color),scTextColor:color(data.message_font_color),scNameColor:color(data.user_info?.name_color),
+        price:Number.isFinite(price)&&price>=0?Math.min(price,10000000):0,duration:Number.isFinite(duration)&&duration>0?Math.min(7200,duration):60,receivedAt};
     }
     if(cmd==='SUPER_CHAT_MESSAGE_DELETE')return {type:'superchat-delete',ids:(Array.isArray(data.ids)?data.ids:[]).slice(0,1000).map(String).filter(id=>/^[\w-]{1,80}$/.test(id)),receivedAt};
     return null;

@@ -67,7 +67,7 @@ const vocalTemplate = {
     try{
       const anchor=this.anchors.findLast(a=>a.time<=time)||this.anchors[0];
       if(!anchor)throw Error('音频时钟未就绪');
-      const mediaStart=anchor.media+(time-anchor.time);
+      const mediaStart=this.mediaAt(time)??(anchor.media+(time-anchor.time));
       const result=await window.live.vocalProcess({left,right,mode:this.strategy,stem:this.stem,streams:vocal.selectedCount(),...window.playbackPerformance?.aiScheduling?.()});
       if(!this.active||epoch!==this.epoch)return;
       const when=time+this.delay;
@@ -122,8 +122,7 @@ const vocalTemplate = {
     if(action.wait){this.feed.pause();video.pause();return;}
     this.feedRequest=requested;this.feedStarted=true;
     if(action.seek!==null&&!this.feed.seeking){this.seekReason='playout-clock';this.feed.currentTime=action.seek;}
-    // Capture stays at the sample rate; only the video uses rate correction.
-    this.feed.playbackRate=1;if(this.feed.paused)this.feed.play().catch(e=>{if(e.name!=="AbortError"&&this.active)this.fail(e);});
+    this.feed.playbackRate=action.smooth?action.rate:1;if(this.feed.paused)this.feed.play().catch(e=>{if(e.name!=="AbortError"&&this.active)this.fail(e);});
     this.anchor();this.ready=now>=this.firstSound;
     while(this.timeline.length>1&&this.timeline[1].when<=now)this.timeline.shift();
     const block=this.timeline.find(b=>b.when<=now&&b.end>now);

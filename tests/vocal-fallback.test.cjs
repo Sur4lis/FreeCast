@@ -51,3 +51,23 @@ test('retry keeps user mute; original-audio recovery clears failure and disables
  f.$('aiRetryB').events.click();await new Promise(resolve=>setImmediate(resolve));assert.equal(p.active,true);assert.equal(f.c.mix.audioB,false);assert.equal(p.output.gain.value,0);
  p.fail(Error('again'));await f.$('aiRawB').events.click();assert.equal(p.active,false);assert.equal(p.mode,'off');assert.equal(p.error,'');assert.equal(f.$('aiRetryB').hidden,true);
 });
+
+test('an automatic slew keeps AI input, output blocks and processing epoch alive',()=>{
+ const f=fixture(),p=ticking(f);p.delay=7;f.c.getDelays=()=>({a:10,b:10});
+ p.feed.currentTime=30;p.feedPlayout={started:true,at:0,target:31,delay:3,smoothAlignment:true};
+ p.firstSound=0;p.timeline=[{when:0,end:1000,mediaStart:20}];const epoch=p.epoch;
+ const video={currentTime:23,seeking:false,paused:false,pause(){throw Error('Must not pause during alignment');}};p.media=()=>video;
+ for(let i=0;i<500;i++){
+  f.c.time=i*100;p.ctx.currentTime=10+i*.1;
+  if(i){p.feed.currentTime+=.1*p.feed.playbackRate;video.currentTime+=.1*(video.playbackRate||1);}
+  const input=p.feed.currentTime;p.tick();
+  assert.equal(p.feed.currentTime,input,'No seek clears the AI queue');assert.equal(p.epoch,epoch);assert.equal(p.active,true);assert.equal(p.feed.paused,false);
+  assert.ok(p.feed.playbackRate>=.97&&p.feed.playbackRate<=1.03);
+ }
+ assert.equal(p.feedPlayout.smoothAlignment,false);
+ assert.equal(p.feed.playbackRate,1);assert.ok(p.anchors.length>0&&p.anchors.length<=250);
+});
+test('AI media mapping interpolates the rate-adjusted input clock',()=>{
+ const f=fixture(),p=ticking(f);p.anchors=[{time:10,media:30},{time:12,media:32.06}];
+ assert.ok(Math.abs(p.mediaAt(11)-31.03)<1e-9);
+});

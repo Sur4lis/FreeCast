@@ -17,3 +17,10 @@ test('SC normalization, deletion and duplicate translation handling',()=>{
  assert.equal(normalize({cmd:'SUPER_CHAT_MESSAGE_JPN',data}),null);assert.equal(normalize({cmd:'SUPER_CHAT_MESSAGE',data:{}}),null);
  const deleted=normalize({cmd:'SUPER_CHAT_MESSAGE_DELETE',data:{ids:[8,'9','<bad>']}});assert.equal(deleted.ids.join(','),'8,9');
 });
+test('SC keeps actual price, platform duration and separate native colors',()=>{
+ const data={id:520,price:52,time:120,background_color:'#F2FFFE',background_bottom_color:'#427D9E',background_price_color:'#7DA4BD',message_font_color:'#FFFFFF',user_info:{uname:'观众',name_color:'#333333'}};
+ const m=normalize({cmd:'SUPER_CHAT_MESSAGE',data});
+ assert.equal(m.price,52);assert.equal(m.duration,120);assert.equal(m.scHeaderColor,data.background_color);assert.equal(m.scColor,data.background_bottom_color);assert.equal(m.scPriceColor,data.background_price_color);assert.equal(m.scTextColor,'#FFFFFF');assert.equal(m.scNameColor,'#333333');
+ const unsafe=normalize({cmd:'SUPER_CHAT_MESSAGE',data:{...data,background_color:'red;display:none',message_font_color:'url(https://example.com)'}});
+ assert.equal(unsafe.scHeaderColor,undefined);assert.equal(unsafe.scTextColor,undefined);assert.equal(unsafe.price,52);
+});

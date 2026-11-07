@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const Sync = require('../browser-extension/ui/sync.js');
 const VisualSync = require('../browser-extension/ui/visual-sync-core.js');
 
-function setup() {
+function setup(saved = {}) {
   class Element {
     constructor() { this.listeners = {}; this.style = {}; this.hidden = true; this.value = ''; this.attributes = {}; this.captured = new Set(); this.draws = []; }
     addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
@@ -23,12 +23,13 @@ function setup() {
   const elements = new Map();
   const $ = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   $('base').value = '3';
-  const timers = new Map(), workers = [], applied = [];
+  const timers = new Map(), workers = [], applied = [], storage = new Map(Object.entries(saved));
   let next = 0, now = 10000;
   const context = {
     console, $, Sync, VisualSync, clamp: Sync.clamp, delays: Sync.delays, generation: 1, offset: 5, pauseLag: 0,
     running: true, paused: false, demo: false, channels: {},
     performance: { now: () => now },
+    localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, String(value)) },
     document: { hidden: false, createElement: () => new Element(), addEventListener() {} },
     addEventListener() {},
     setInterval(fn) { timers.set(++next, fn); return next; },
@@ -72,9 +73,77 @@ function setup() {
     }
     return actions;
   };
-  return { $, context, workers, timers, applied, result, tick, now: () => now,
+  return { $, context, workers, timers, applied, result, tick, storage, now: () => now,
     advance: milliseconds => { now += milliseconds; for (const fn of [...timers.values()]) fn(); } };
 }
+
+function attachPlaybackBuffers(t) {
+  const states = new Map();
+  class Hls {
+    constructor(media, edge) {
+      this.config = {};
+      const state = { start: edge - 53, edge };
+      states.set(media, state);
+      this.trigger = (_event, range) => { state.start = Math.max(state.start, range.endOffset); };
+      media.buffered = { length: 1, start: () => state.start, end: () => edge + (t.now() - 10000) / 1000 };
+    }
+  }
+  Hls.Events = { BUFFER_FLUSHING: 'flush' };
+  t.context.Hls = Hls;
+  t.context.playbackPerformance = { smooth: () => true };
+  t.context.replay = { seconds: () => 0 };
+  for (const [key, id, edge] of [['a', 'audioA', 1000], ['b', 'videoB', 200]]) {
+    const channel = t.context.channels[key]; channel.media.id = id;
+    channel.engine = new Hls(channel.media, edge);
+  }
+  vm.runInContext(fs.readFileSync('browser-extension/ui/media-buffer.js', 'utf8'), t.context);
+  return t.context.mediaBuffers;
+}
+
+test('smooth playback retains a matched 60-second target and restores normal buffer policy after applying', () => {
+  const t = setup(); t.context.offset = 0;
+  t.context.channels.a.media.currentTime = 997;
+  const buffers = attachPlaybackBuffers(t);
+  t.$('autoSyncStart').fire('click');
+  assert.equal(t.context.channels.b.engine.config.backBufferLength, 83);
+  for (let elapsed = .25; elapsed <= 80 && !t.workers[0].terminated; elapsed += .25) {
+    for (const [key, base] of [['a', 997], ['b', 197]]) {
+      const media = t.context.channels[key].media; media.currentTime = base + elapsed;
+      const callback = [...media.callbacks.values()].at(-1);
+      callback(t.now() + 250, { expectedDisplayTime: t.now() + 250, mediaTime: media.currentTime });
+      t.workers[0].onmessage({ data: { type: 'ready', key } });
+    }
+    t.advance(250);
+    for (const channel of Object.values(t.context.channels)) buffers.trim(channel, true);
+    if (elapsed >= 74 && elapsed % 2 === 0) t.result(t.now() / 1000, 860);
+  }
+  assert.deepEqual(t.applied, [-60]);
+  assert.equal(t.workers[0].terminated, true);
+  assert.equal(t.context.channels.a.engine.config.backBufferLength, 53);
+  assert.equal(t.context.channels.b.engine.config.backBufferLength, 113, 'Keep the newly applied delay, not the temporary reservation');
+  assert.equal(t.context.channels.b.engine.config.maxBufferSize, 32 * 1024 * 1024);
+});
+
+test('cancellation, invalidation and worker errors release both temporary history reservations', () => {
+  for (const cancel of [
+    t => t.$('autoSyncCancel').fire('click'),
+    t => t.context.autoSync.invalidate(),
+    t => t.context.updateOffset(1),
+    t => t.workers[0].onerror({ preventDefault() {} }),
+    t => { t.context.generation++; t.result(10); },
+    t => t.context.channels.a.media.fire('seeking')
+  ]) {
+    const t = setup(), buffers = attachPlaybackBuffers(t);
+    t.$('autoSyncStart').fire('click');
+    assert.equal(t.context.channels.a.engine.config.backBufferLength, 88);
+    assert.equal(t.context.channels.b.engine.config.backBufferLength, 83);
+    cancel(t);
+    assert.equal(t.workers[0].terminated, true);
+    for (const key of ['a', 'b']) {
+      assert.equal(buffers.configure(t.context.channels[key]).retain, 50 + t.context.getDelays()[key]);
+    }
+  }
+});
 
 test('stable matches align the real playback clocks once, release resources, and support undo', () => {
   const t = setup(); t.$('autoSyncStart').fire('click');
@@ -234,12 +303,12 @@ test('undo leaves playback unchanged when its prior timeline is no longer buffer
   assert.equal(t.context.channels.a.media.currentTime, 997);
 });
 
-test('AI audio processing must be off before visual alignment starts', () => {
+test('AI warmup waits for stable output before visual alignment starts', () => {
   for (const state of [{ active: true }, { loading: true }]) {
     const t = setup(); t.context.vocal = state;
     t.$('autoSyncStart').fire('click');
     assert.equal(t.workers.length, 0); assert.deepEqual(t.applied, []);
-    assert.match(t.$('autoSyncStatus').textContent, /关闭 AI 音频处理/);
+    assert.match(t.$('autoSyncStatus').textContent, /AI 音频正在缓冲/);
   }
 });
 
@@ -462,4 +531,88 @@ test('strong edge differences explain a refusal without applying or carrying ove
   t.workers[0].onmessage({ data: { type: 'result', at: 18, result: refusal } });
   assert.doesNotMatch(t.$('autoSyncStatus').textContent, /选区边缘/);
   assert.deepEqual(t.applied, []);
+});
+
+function enableStableAI(t, selected) {
+  const pipes = {};
+  t.context.vocal = {active: true, ready: true, loading: false, delay: 7, bufferPadding: () => 0, pipes};
+  for (const key of ['a', 'b']) {
+    const c = t.context.channels[key]; c.media.currentTime -= 7;
+    c.playout.target = c.media.currentTime; c.playout.delay = t.context.getDelays()[key];
+    if (selected.includes(key)) pipes[key] = {active: true, delay: 7, epoch: 3,
+      feed: {currentTime: c.media.currentTime + 7},
+      feedPlayout: {started: true, target: c.media.currentTime + 7, at: t.now(), delay: t.context.getDelays()[key] - 7}};
+  }
+  return pipes;
+}
+for (const selected of ['a', 'b']) test('alignment preserves the live AI ' + selected + ' input and adjusts the other route', () => {
+  const t = setup(), pipes = enableStableAI(t, [selected]);
+  const input = pipes[selected].feed.currentTime, output = t.context.channels[selected].media.currentTime;
+  t.$('autoSyncStart').fire('click'); assert.equal(t.workers.length, 1);
+  t.result(10); t.result(12); t.result(14);
+  assert.deepEqual(t.applied, [-6]);
+  const state = pipes[selected].feedPlayout;
+  assert.equal(state.target, input); assert.equal(state.manualShift, 0); assert.equal(state.smoothAlignment, false);
+  assert.equal(pipes[selected].epoch, 3); assert.equal(t.context.channels[selected].media.currentTime, output);
+  const other = selected === 'a' ? 'b' : 'a', target = t.context.channels[other].playout.target;
+  assert.ok(Math.abs((selected === 'a' ? output - target : target - output) - 806) < .001);
+  assert.equal(state.delay, t.context.getDelays()[selected] - 7, 'AI processing latency remains independently compensated');
+});
+test('dual AI alignment uses bounded rate correction instead of resetting either audio feed', () => {
+  const t = setup(), pipes = enableStableAI(t, ['a', 'b']);
+  t.$('autoSyncStart').fire('click'); t.result(10); t.result(12); t.result(14);
+  assert.deepEqual(t.applied, [-6]);
+  for (const key of ['a', 'b']) {
+    const p = pipes[key]; assert.equal(p.feedPlayout.smoothAlignment, true);
+    const action = Sync.playoutStep(p.feedPlayout, {now: t.now(), current: p.feed.currentTime,
+      ranges: [[0, 2000]], edge: 2000, delay: t.context.getDelays()[key] - p.delay, ready: 4});
+    assert.equal(action.seek, null); assert.equal(action.wait, false); assert.ok(action.rate >= .97 && action.rate <= 1.03);
+    assert.equal(p.epoch, 3);
+  }
+});
+test('an AI restart during matching discards the stale match', () => {
+  const t = setup(), pipes = enableStableAI(t, ['b']);
+  t.$('autoSyncStart').fire('click'); t.result(10); t.result(12); pipes.b.epoch++; t.result(14);
+  assert.deepEqual(t.applied, []); assert.equal(t.workers[0].terminated, true);
+});
+test('intermediate unmatched frames keep collecting and can still produce a valid match', () => {
+  const t = setup(); t.$('autoSyncStart').fire('click');
+  t.workers[0].onmessage({data: {type: 'result', at: 10, result: {status: 'unmatched'}}});
+  assert.doesNotMatch(t.$('autoSyncStatus').textContent, /未找到|失败/); assert.ok(!t.workers[0].terminated);
+  t.result(12); t.result(14); t.result(16); assert.deepEqual(t.applied, [-6]);
+});
+test('periodic matching requires a saved region, waits five minutes and never overlaps workers', () => {
+  const t = setup(); t.$('autoSyncInterval').value = '300'; t.$('autoSyncInterval').fire('change');
+  t.advance(301000); assert.equal(t.workers.length, 0);
+  t.$('autoSyncRegion').fire('click'); t.$('syncRegionSave').fire('click');
+  t.advance(299000); assert.equal(t.workers.length, 0);
+  t.advance(1000); assert.equal(t.workers.length, 1);
+  t.advance(1000); assert.equal(t.workers.length, 1);
+  t.result(10); t.result(12); t.result(14);
+  for (const key of ['a', 'b']) assert.equal(t.context.channels[key].playout.smoothAlignment, true);
+  assert.match(t.$('autoSyncStatus').textContent, /平滑校准/);
+  t.$('autoSyncInterval').value = '0'; t.$('autoSyncInterval').fire('change');
+  assert.equal(t.timers.size, 0); t.advance(600000); assert.equal(t.workers.length, 1);
+  const prefs = JSON.parse(t.storage.get('freecast-auto-sync-v1'));
+  assert.equal(prefs.interval, 0); assert.equal(Object.keys(prefs.regions).length, 1);
+});
+test('periodic checks defer while hidden, paused, replaying or AI is warming up', () => {
+  for (const mode of ['hidden', 'paused', 'replay', 'AI']) {
+    const t = setup(); t.$('autoSyncRegion').fire('click'); t.$('syncRegionSave').fire('click');
+    t.$('autoSyncInterval').value = '300'; t.$('autoSyncInterval').fire('change');
+    if(mode==='hidden')t.context.document.hidden=true;
+    if(mode==='paused')t.context.paused=true;
+    if(mode==='replay')t.context.replay={active:true};
+    if(mode==='AI')t.context.vocal={loading:true};
+    t.advance(300000); assert.equal(t.workers.length, 0);
+    t.context.document.hidden=false;t.context.paused=false;t.context.replay={active:false};t.context.vocal={loading:false};
+    t.advance(1000); assert.equal(t.workers.length, 1);
+  }
+});
+test('saved frequency and per-room crops survive reload without starting a continuous matcher', () => {
+  const t = setup(); t.$('autoSyncRegion').fire('click'); t.$('syncRegionSave').fire('click');
+  t.$('autoSyncInterval').value = '300'; t.$('autoSyncInterval').fire('change');
+  const reload = setup(Object.fromEntries(t.storage)); assert.equal(reload.$('autoSyncInterval').value, '300');
+  reload.advance(1000); reload.advance(299000); assert.equal(reload.workers.length, 0);
+  reload.advance(1000); assert.equal(reload.workers.length, 1);
 });

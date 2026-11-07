@@ -58,6 +58,19 @@ test('smooth playback reduces idle cache without shortening replay or requested 
  setDelay(65);assert.equal(api.configure(channel).retain,385);setSeconds(0);assert.equal(api.configure(channel).retain,115);
  setDelay(3);setPause(true);assert.equal(api.configure(channel).retain,113);setPause(false);assert.equal(api.configure(channel).retain,53);
 });
+test('temporary history changes only backward retention and respects replay for HLS and FLV',()=>{
+ for(const hls of [false,true]){
+  const {api,channel,Hls,window,setSeconds,setDelay,mse}=bufferFixture();
+  window.playbackPerformance={smooth:()=>true};setSeconds(0);if(hls)channel.engine=new Hls();
+  const normal=api.configure(channel),release=api.reserveHistory(channel,60),held=api.configure(channel);
+  assert.equal(held.retain,83);assert.equal(held.forward,normal.forward);assert.equal(held.bytes,normal.bytes);
+  assert.equal(hls?channel.engine.config.backBufferLength:mse._config.autoCleanupMinBackwardDuration, hls?83:73);
+  release();release();assert.equal(api.configure(channel).retain,53);
+  setSeconds(300);const replayRelease=api.reserveHistory(channel,60);assert.equal(api.configure(channel).retain,323);
+  setDelay(63);replayRelease();assert.equal(api.configure(channel).retain,383);
+ }
+});
+
 test('PCM replay has a byte ceiling and shrinking or disabling the cache releases it',()=>{
  let seconds=300;const pipe={overlap:22050,rate:44100,detachMirror(){},disable(){},fail(){}};
  const window={vocal:{pipes:{b:pipe}},replay:{seconds:()=>seconds}};

@@ -8,7 +8,7 @@ let channels = {}, running = false, paused = false, demo = false, generation = 0
 let connecting = null;
 let offset = 0, pauseStarted = 0, pauseLag = 0, demoStart = 0, demoPaused = 0, lastDemoMessage = -1;
 let audioContext, oscillator, gain, lane = 0;
-const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50, danmakuSourceColors: true, danmakuPlatformColors: false, danmakuColorA: '#66ccff', danmakuColorB: '#ff99cc' });
+const defaultMix = Object.freeze({ audioA: true, audioB: true, videoA: true, videoB: true, chatA: true, chatB: false, qualityA: 10000, qualityB: 10000, main: 'b', muted: false, showChat: true, showSC: true, danmakuTransparency: 50, danmakuSize: 20, danmakuSpeed: 1, scMaxDuration: 60, danmakuDensity: 75, danmakuArea: 50, danmakuSourceColors: false, danmakuPlatformColors: true, danmakuColorA: '#66ccff', danmakuColorB: '#ff99cc' });
 let mix = {...defaultMix};
 let favorites = [], activeSource = 'a', viewMode = 'normal';
 const defaultFavorites = [
@@ -38,6 +38,7 @@ function notice(text, error = false) { $('notice').textContent = text; $('notice
 function save() {
   localStorage.setItem(settingsKey, JSON.stringify({ a: $('roomA').value, b: $('roomB').value, offset, base: $('base').value, chat: $('chatOffset').value, volume: $('volume').value, mix, favorites, activeSource }));
 }
+try { window.danmakuColorDefaults?.migrate(localStorage); } catch {}
 try {
   const s = JSON.parse(localStorage.getItem(settingsKey) || 'null');
   if (s) { $('roomA').value = s.a || '84074'; $('roomB').value = s.b || '6'; offset = clamp(Number(s.offset) || 0, -60, 60); $('base').value = ['3', '5', '8'].includes(s.base) ? s.base : '3'; $('chatOffset').value = clamp(Number(s.chat) || 0, -10, 30); $('volume').value = clamp(Number(s.volume) || 0, 0, 100); }

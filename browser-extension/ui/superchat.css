@@ -1,0 +1,18 @@
+:root .superchat-card{--sc-unit:1;margin-bottom:8px;border:1px solid #ffffff4d;border-radius:9px;overflow:hidden;background:var(--sc-body-surface)!important;color:var(--sc-body-ink)!important;box-shadow:0 4px 14px #0003;text-shadow:none}
+:root #chatList .superchat-card{padding:0}
+:root .superchat-card .superchat-heading{display:flex;align-items:center;gap:calc(8px * var(--sc-unit));min-height:0;padding:calc(7px * var(--sc-unit)) calc(10px * var(--sc-unit));background:var(--sc-header-surface)!important;color:var(--sc-header-ink)!important;font-size:calc(12px * var(--sc-unit));line-height:1.4;text-decoration:none}
+:root .superchat-card .superchat-avatar{flex:none;width:calc(26px * var(--sc-unit));height:calc(26px * var(--sc-unit));border:0;border-radius:50%;object-fit:cover}
+:root .superchat-card .superchat-user{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:inherit!important}
+:root .superchat-card .superchat-price{flex:none;max-width:55%;padding:0;background:transparent;color:var(--sc-header-ink)!important;font-size:calc(13px * var(--sc-unit));font-weight:600;font-variant-numeric:tabular-nums;line-height:1.4;white-space:nowrap}
+:root .superchat-card button.superchat-message{box-sizing:border-box;width:100%;min-height:0;margin:0;padding:calc(9px * var(--sc-unit)) calc(11px * var(--sc-unit));border:0;border-radius:0;background:transparent!important;color:var(--sc-body-ink)!important;font:400 calc(14px * var(--sc-unit))/1.5 system-ui,"Microsoft YaHei",sans-serif;text-align:left;text-shadow:none;overflow-wrap:anywhere;white-space:pre-wrap}
+:root .superchat-card button.superchat-message:hover{background:#ffffff0c!important}
+:root #superChatOverlay .superchat-card{--sc-unit:var(--sc-scale,1);margin-bottom:calc(8px * var(--sc-unit));border-radius:calc(9px * var(--sc-unit))}
+:root #superChatOverlay .superchat-message{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.sc-action-menu{position:fixed;z-index:110;display:flex;gap:5px;padding:6px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 24px #0003}
+.sc-action-menu[hidden]{display:none}
+:root .sc-action-menu button{min-height:34px;padding:5px 10px;font-size:12px;border-radius:6px;white-space:nowrap;background:var(--control);color:var(--text);border:1px solid var(--line)}
+:root .chat-user-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.chat-user-buttons [hidden]{display:none!important}
+.sc-swipe-close{touch-action:pan-y}
+html[data-edition] #superChatOverlay{touch-action:pan-y}
+html[data-edition] #superChatOverlay.sc-position-editing{touch-action:none}

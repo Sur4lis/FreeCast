@@ -26,6 +26,7 @@
   }
   function shiftPlayout(state, seconds) {
     if (!state?.started || !Number.isFinite(seconds)) return;
+    state.smoothAlignment = false;
     state.manualShift = (state.manualShift || 0) + seconds;
     if (Math.abs(state.manualShift) < .000001) state.manualShift = 0;
   }
@@ -43,6 +44,13 @@
       return { wait: false, seek: Math.abs(current-target) > .18 ? target : null, rate: 1 };
     }
     let target = state.target + (now-state.at)/1000;
+    if(state.smoothAlignment){
+      state.manualShift=0;state.adjusting=false;state.driftAt=null;state.settleUntil=0;
+      if(seeking||ready<3)return{wait:false,seek:null,rate:1,smooth:true};
+      const delta=target-current;
+      if(Math.abs(delta)<=.025){state.smoothAlignment=false;state.target=current;state.at=now;return{wait:false,seek:null,rate:1};}
+      return{wait:false,seek:null,rate:clamp(1+delta*.12,.97,1.03),smooth:true};
+    }
     if (state.manualShift) {
       if (seeking) return {wait:false,seek:null,rate:1};
       // A manual step is relative to the frame the user is watching, not clock drift.

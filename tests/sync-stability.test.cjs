@@ -96,3 +96,19 @@ test('an evicted clock target recovers into the playable buffer',()=>{
   const recovered=playoutStep(state,{now:3200,current:28,ranges:[[50,72.2]],edge:72.2,delay:3,ready:4});
   assert.ok(recovered.seek>=67&&recovered.seek<=70);
 });
+
+for(const correction of [-2,.1,2])test('automatic '+correction+' second calibration converges without a seek or pause',()=>{
+ const state={started:true,at:0,target:30+correction,delay:3,smoothAlignment:true};let current=30,rate=1;
+ for(let n=0;n<=1800;n++){
+  if(n)current+=.1*rate;
+  const action=playoutStep(state,{now:n*100,current,ranges:[[0,400]],edge:400,delay:3,ready:4});
+  assert.equal(action.seek,null);assert.equal(action.wait,false);assert.ok(action.rate>=.97&&action.rate<=1.03);rate=action.rate;
+ }
+ assert.ok(Math.abs(current-(210+correction))<=.03);assert.equal(state.smoothAlignment,false);
+});
+test('manual micro-adjustments override an unfinished automatic slew',()=>{
+ const state={started:true,at:0,target:32,delay:3,smoothAlignment:true};shiftPlayout(state,.1);
+ assert.equal(state.smoothAlignment,false);
+ const action=playoutStep(state,{now:0,current:30,ranges:[[0,40]],edge:40,delay:3.1,ready:4});
+ assert.ok(Math.abs(action.seek-29.9)<1e-9);
+});

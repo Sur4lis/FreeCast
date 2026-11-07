@@ -38,7 +38,7 @@ function fixture(saved={},mobile=false){
   });
   document=context.document={listeners:{},documentElement:{dataset:{theme:'bluepink'}},getElementById:element,
     addEventListener(type,fn){(this.listeners[type]??=[]).push(fn);},querySelector:s=>s==='.player-bottom'?element('playerBottom'):null,querySelectorAll:()=>[],
-    createTreeWalker:()=>({nextNode:()=>null}),createElement(tag){const el=new Element();if(tag==='canvas'){const ops=[],ctx={scale(){},beginPath(){},roundRect(){},fill(){},stroke(){ops.push(this.strokeStyle);}};el.getContext=()=>ctx;el.ops=ops;canvases.push(el);}return el;}
+    createTreeWalker:()=>({nextNode:()=>null}),createElement(tag){const el=new Element();if(tag==='canvas'){const ops=[],ctx={save(){},restore(){},clip(){},scale(){},beginPath(){},roundRect(){},fill(){},stroke(){ops.push(this.strokeStyle);}};el.getContext=()=>ctx;el.ops=ops;canvases.push(el);}return el;}
   };
   context.window=context;
   for(const [id,value] of Object.entries({base:'3',volume:'80',sourceVolumeA:'100',sourceVolumeB:'45'}))element(id).value=value;
@@ -48,7 +48,7 @@ function fixture(saved={},mobile=false){
   element('playerBottom').parentElement=element('player');element('superChatOverlay').hidden=true;
   const run=source=>vm.runInContext(source,context);
   const load=name=>vm.runInContext(fs.readFileSync(path.join(__dirname,'../browser-extension/ui',name),'utf8'),context,{filename:name});
-  for(const file of ['app.js','browser.js','chat-rules.js','danmaku-style.js'])load(file);
+  for(const file of ['color-defaults.js','app.js','browser.js','chat-rules.js','danmaku-style.js'])load(file);
   if(mobile)run(fs.readFileSync(path.join(__dirname,'../android/web/configurations.js'),'utf8'));else load('configurations.js');
   run('account={loggedIn:true,uid:123,name:"测试用户"}');
   return{context,element,run,load,storage,recorded,remembered,canvases,emit:m=>chatListeners.forEach(fn=>fn(m))};
@@ -126,8 +126,9 @@ test('recorded overlay keeps own sky-blue borders and refreshes merged message t
 
 for(const mobile of fs.existsSync(path.join(__dirname,'../android/web/configurations.js'))?[false,true]:[false])test(`${mobile?'Android':'PC'} source colors survive reload, preset switching and invalid imported colors`,()=>{
   const f=fixture({},mobile),overlay=f.element('danmaku');
-  assert.equal(overlay.dataset.sourceColors,'false');assert.equal(overlay.dataset.platformColors,'false');
-  f.run('mix.chatB=true;danmakuStyle.sourceColors()');
+  assert.equal(overlay.dataset.sourceColors,'false');assert.equal(overlay.dataset.platformColors,'true');
+  f.run('mix.chatB=true;danmakuStyle.sourceColors()');assert.equal(overlay.dataset.sourceColors,'false');
+  f.element('danmakuSourceColors').checked=true;f.element('danmakuSourceColors').dispatch('change');
   assert.equal(overlay.dataset.sourceColors,'true');
   assert.equal(overlay.style['--danmaku-color-a'],'#66ccff');
   assert.equal(overlay.style['--danmaku-color-b'],'#ff99cc');
@@ -147,8 +148,8 @@ for(const mobile of fs.existsSync(path.join(__dirname,'../android/web/configurat
   assert.equal(reloaded.context.configurations.capture().mix.danmakuSourceColors,false);
   assert.equal(reloaded.context.configurations.capture().mix.danmakuPlatformColors,true);
   reloaded.element('resetDanmakuStyle').dispatch('click');
-  assert.equal(reloaded.element('danmaku').dataset.sourceColors,'true');
-  assert.equal(reloaded.element('danmaku').dataset.platformColors,'false');
+  assert.equal(reloaded.element('danmaku').dataset.sourceColors,'false');
+  assert.equal(reloaded.element('danmaku').dataset.platformColors,'true');
   assert.equal(reloaded.element('danmakuColorA').value,'#66ccff');assert.equal(reloaded.element('danmakuColorB').value,'#ff99cc');
   reloaded.context.configurations.apply(saved);assert.equal(reloaded.element('danmakuColorB').value,'#ee2288');
   for(const bad of ['red','url(https://example.test)','#abc','#123456;display:none',null,17]){
