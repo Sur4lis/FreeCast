@@ -62,6 +62,7 @@ if (!localStorage.getItem('goat-default-favorites-v1')) {
 }
 function getDelays() { const d = delays(offset, Number($('base').value)), extra = window.vocal?.active && !demo ? window.vocal.delay + window.vocal.bufferPadding() : 0; return { a: d.a + pauseLag + extra, b: d.b + pauseLag + extra }; }
 function updateOffset(value = offset) {
+  window.autoSync?.invalidate('偏移或缓冲设置已改变，请重新自动对齐。');
   const replayLag=window.replay?.active?window.replay.currentLag():null;
   const previous=delays(offset,0);
   offset = Math.round(clamp(Number(value) || 0, -60, 60) * 10) / 10;
@@ -88,6 +89,7 @@ class Channel {
     clearTimeout(this.retryTimer); this.retryTimer = null; this.refreshing = false; this.recoveryBlocked = false;
     if (!recovering) { this.retryAttempts = 0; this.recoveryReason = ''; }
     this.recovering = recovering; this.healthySince = null; this.lastMediaTime = null;
+    window.autoSync?.invalidate('直播线路已改变，请稳定播放后重新自动对齐。');
     this.loadRevision=(this.loadRevision||0)+1;
     const revision = this.loadRevision, current = () => !this.closed && this.loadRevision === revision;
     window.replay?.clearSource(this.name === 'A 音频' ? 'a' : 'b');
@@ -205,6 +207,7 @@ function cancelConnection(showNotice = true) {
   if (showNotice) notice(running ? '已取消换源，继续播放当前直播。' : '已取消连接。');
 }
 async function stop({preserveConnection = null} = {}) {
+  window.autoSync?.invalidate('已断开连接，本次自动对齐已取消。');
   const closingRecording = window.localRecording?.stop();
   if (connecting !== preserveConnection) cancelConnection(false);
   window.vocal?.disable();
@@ -317,6 +320,7 @@ window.live.onChat(message => {
 });
 function togglePause() {
   if (!running) return;
+  window.autoSync?.invalidate('播放已暂停或恢复，请稳定播放后重新自动对齐。');
   window.replay?.capturePause();
   paused = !paused; const now = performance.now();
   if (paused) { pauseStarted = now; for (const c of Object.values(channels)) c.media.pause(); window.vocal?.pause(); demoPaused = now; }
